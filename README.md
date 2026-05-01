@@ -191,8 +191,37 @@ npm run preview
 
 ## 公開方法
 
-`npm run build`で作成される`dist/`ディレクトリを、静的サイトとして配信できるサービスにアップロードします。
-外部APIやバックエンドは不要です。
+このアプリは外部APIやバックエンドを使わないため、静的サイトとして公開できます。
+
+### Vercelで公開する場合
+
+Vercelでの公開を推奨します。
+
+1. このプロジェクトをGitHubなどのリポジトリにpushする
+2. Vercelでリポジトリをimportする
+3. Framework Presetに`Vite`を選ぶ
+4. Build Commandが`npm run build`になっていることを確認する
+5. Output Directoryが`dist`になっていることを確認する
+6. Deployを実行する
+
+### GitHub Pagesで公開する場合
+
+GitHub Pagesでリポジトリ配下に公開する場合は、Viteの`base`設定が必要になることがあります。
+
+例: `https://ユーザー名.github.io/task-board-app/`で公開する場合
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  base: '/task-board-app/',
+})
+```
+
+`base`の値は、公開先のリポジトリ名やURLに合わせて変更してください。
 
 ## 画面イメージ
 

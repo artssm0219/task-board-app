@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import type { Priority, Task } from '../types/task'
 
 const STORAGE_KEY = 'task-board-app:tasks'
+const SAVE_ERROR_MESSAGE =
+  'データを保存できませんでした。ブラウザの容量や設定を確認してください。'
 const priorities: Priority[] = ['high', 'medium', 'low']
 
 type StoredTasksState = {
@@ -42,7 +44,8 @@ const readTasksFromStorage = (): StoredTasksState => {
     if (!Array.isArray(parsedTasks) || !parsedTasks.every(isTask)) {
       return {
         tasks: [],
-        error: '保存済みデータの形式が正しくなかったため、空の状態で起動しました。',
+        error:
+          '保存データを読み込めなかったため、初期状態で表示しています。',
       }
     }
 
@@ -50,26 +53,60 @@ const readTasksFromStorage = (): StoredTasksState => {
   } catch {
     return {
       tasks: [],
-      error: '保存済みデータを読み込めなかったため、空の状態で起動しました。',
+      error: '保存データを読み込めなかったため、初期状態で表示しています。',
     }
   }
+}
+
+const resolveNextTasks = (
+  action: SetStateAction<Task[]>,
+  currentTasks: Task[],
+) => {
+  if (typeof action === 'function') {
+    return action(currentTasks)
+  }
+
+  return action
 }
 
 export const useLocalStorageTasks = (): {
   tasks: Task[]
   setTasks: Dispatch<SetStateAction<Task[]>>
-  storageError: string | null
+  storageWarning: string | null
+  dismissStorageWarning: () => void
 } => {
   const [storedState] = useState(readTasksFromStorage)
   const [tasks, setTasks] = useState<Task[]>(storedState.tasks)
+  const tasksRef = useRef(storedState.tasks)
+  const [storageWarning, setStorageWarning] = useState<string | null>(
+    storedState.error,
+  )
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks))
-    } catch {
-      console.warn('タスクをブラウザに保存できませんでした。')
-    }
-  }, [tasks])
+  const persistTasks: Dispatch<SetStateAction<Task[]>> = useCallback(
+    (action) => {
+      const nextTasks = resolveNextTasks(action, tasksRef.current)
 
-  return { tasks, setTasks, storageError: storedState.error }
+      tasksRef.current = nextTasks
+      setTasks(nextTasks)
+
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(nextTasks))
+        setStorageWarning(null)
+      } catch {
+        setStorageWarning(SAVE_ERROR_MESSAGE)
+      }
+    },
+    [],
+  )
+
+  const dismissStorageWarning = useCallback(() => {
+    setStorageWarning(null)
+  }, [])
+
+  return {
+    tasks,
+    setTasks: persistTasks,
+    storageWarning,
+    dismissStorageWarning,
+  }
 }

@@ -12,11 +12,12 @@ export const TaskForm = ({ onAddTask }: TaskFormProps) => {
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState('')
   const [priority, setPriority] = useState<Priority>(defaultPriority)
+  const isTitleBlank = title.trim().length === 0
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    if (!title.trim()) {
+    if (isTitleBlank) {
       return
     }
 
@@ -37,7 +38,12 @@ export const TaskForm = ({ onAddTask }: TaskFormProps) => {
           onChange={(event) => setTitle(event.target.value)}
           placeholder="例: 企画書を確認する"
           autoComplete="off"
+          required
+          aria-describedby="task-title-help"
         />
+        <p className="field-hint" id="task-title-help">
+          タスク名を入力すると追加できます。
+        </p>
       </div>
 
       <div className="field">
@@ -65,7 +71,7 @@ export const TaskForm = ({ onAddTask }: TaskFormProps) => {
         </select>
       </div>
 
-      <button className="primary-button" type="submit">
+      <button className="primary-button" type="submit" disabled={isTitleBlank}>
         追加
       </button>
     </form>

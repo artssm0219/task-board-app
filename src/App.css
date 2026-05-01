@@ -71,12 +71,31 @@ h2 {
 }
 
 .storage-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 16px;
   padding: 12px 14px;
   border: 1px solid #e9cf74;
   border-radius: var(--radius);
   color: var(--warning-text);
   background: var(--warning-bg);
+}
+
+.storage-alert__close {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid rgba(107, 78, 0, 0.28);
+  border-radius: 6px;
+  color: var(--warning-text);
+  font-weight: 700;
+  background: #ffffff;
+}
+
+.storage-alert__close:hover {
+  border-color: rgba(107, 78, 0, 0.5);
 }
 
 .tool-section,
@@ -133,6 +152,12 @@ h2 {
   border-radius: 6px;
   color: var(--text);
   background: #ffffff;
+}
+
+.field-hint {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
 }
 
 .field input:focus,
@@ -213,6 +238,11 @@ button:focus-visible {
 
 .primary-button:hover {
   background: var(--primary-hover);
+}
+
+.primary-button:disabled {
+  color: #6d7884;
+  background: #dce3ea;
 }
 
 .secondary-button {
@@ -426,6 +456,15 @@ button:focus-visible {
 
   .danger-button {
     grid-column: 2;
+    width: 100%;
+  }
+
+  .storage-alert {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .storage-alert__close {
     width: 100%;
   }
 }

@@ -46,6 +46,7 @@ export const TaskItem = ({
     <button
       className="danger-button"
       type="button"
+      aria-label={`${task.title}を削除`}
       onClick={() => onDeleteTask(task.id)}
     >
       削除

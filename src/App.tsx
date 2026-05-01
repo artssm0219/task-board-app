@@ -15,7 +15,8 @@ const initialStatusFilter: StatusFilter = 'all'
 const initialPriorityFilter: PriorityFilter = 'all'
 
 function App() {
-  const { tasks, setTasks, storageError } = useLocalStorageTasks()
+  const { tasks, setTasks, storageWarning, dismissStorageWarning } =
+    useLocalStorageTasks()
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] =
     useState<StatusFilter>(initialStatusFilter)
@@ -88,10 +89,17 @@ function App() {
         </dl>
       </header>
 
-      {storageError ? (
-        <p className="storage-alert" role="alert">
-          {storageError}
-        </p>
+      {storageWarning ? (
+        <div className="storage-alert" role="alert">
+          <p>{storageWarning}</p>
+          <button
+            className="storage-alert__close"
+            type="button"
+            onClick={dismissStorageWarning}
+          >
+            閉じる
+          </button>
+        </div>
       ) : null}
 
       <section className="tool-section" aria-labelledby="add-task-heading">
