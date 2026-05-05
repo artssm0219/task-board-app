@@ -12,7 +12,25 @@ type TaskItemProps = {
   onDeleteTask: (taskId: string) => void
 }
 
-const taskStatuses: TaskStatus[] = ['todo', 'inProgress', 'done']
+type StatusAction = {
+  status: TaskStatus
+  label: string
+}
+
+const statusActionsByStatus: Record<TaskStatus, StatusAction[]> = {
+  todo: [
+    { status: 'inProgress', label: '進行中にする' },
+    { status: 'done', label: '完了にする' },
+  ],
+  inProgress: [
+    { status: 'todo', label: '未着手に戻す' },
+    { status: 'done', label: '完了にする' },
+  ],
+  done: [
+    { status: 'todo', label: '未着手に戻す' },
+    { status: 'inProgress', label: '進行中に戻す' },
+  ],
+}
 
 const formatDate = (date: string) =>
   new Intl.DateTimeFormat('ja-JP', {
@@ -43,6 +61,15 @@ export const TaskItem = ({
     setIsEditing(false)
   }
 
+  const taskItemClassName = [
+    'task-item',
+    `task-item--status-${task.status}`,
+    isOverdue ? 'task-item--overdue' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+  const statusActions = statusActionsByStatus[task.status]
+
   if (isEditing) {
     return (
       <li className="task-item task-item--editing">
@@ -56,7 +83,7 @@ export const TaskItem = ({
   }
 
   return (
-    <li className={isOverdue ? 'task-item task-item--overdue' : 'task-item'}>
+    <li className={taskItemClassName}>
       <div className="task-item__content">
         <p
           className={task.status === 'done' ? 'task-title task-title--done' : 'task-title'}
@@ -85,21 +112,22 @@ export const TaskItem = ({
         </div>
       </div>
 
-      <div className="task-status-control">
-        <label htmlFor={`status-${task.id}`}>状態</label>
-        <select
-          id={`status-${task.id}`}
-          value={task.status}
-          onChange={(event) =>
-            onStatusChange(task.id, event.target.value as TaskStatus)
-          }
-        >
-          {taskStatuses.map((taskStatus) => (
-            <option key={taskStatus} value={taskStatus}>
-              {taskStatusLabels[taskStatus]}
-            </option>
-          ))}
-        </select>
+      <div
+        className="task-status-actions"
+        role="group"
+        aria-label={`${task.title}の状態変更`}
+      >
+        {statusActions.map((action) => (
+          <button
+            key={action.status}
+            className={`status-action-button status-action-button--${action.status}`}
+            type="button"
+            aria-label={`${task.title}を${action.label}`}
+            onClick={() => onStatusChange(task.id, action.status)}
+          >
+            {action.label}
+          </button>
+        ))}
       </div>
 
       <div className="task-actions">
