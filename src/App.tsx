@@ -3,6 +3,7 @@ import './App.css'
 import { TaskBoard } from './components/TaskBoard'
 import { TaskFilters } from './components/TaskFilters'
 import { TaskForm } from './components/TaskForm'
+import { TaskImportExport } from './components/TaskImportExport'
 import { TaskList } from './components/TaskList'
 import { TaskSummary } from './components/TaskSummary'
 import { ThemeToggle } from './components/ThemeToggle'
@@ -13,6 +14,8 @@ import type {
   PriorityFilter,
   SortOption,
   StatusFilter,
+  Task,
+  TaskImportMode,
   TaskStatus,
   TaskDraft,
   TaskUpdate,
@@ -93,6 +96,19 @@ function App() {
     setSortOption(initialSortOption)
   }
 
+  const handleImportTasks = (
+    importedTasks: Task[],
+    importMode: TaskImportMode,
+  ) => {
+    if (importMode === 'replace') {
+      setTasks(importedTasks)
+      handleResetFilters()
+      return
+    }
+
+    setTasks((currentTasks) => [...importedTasks, ...currentTasks])
+  }
+
   return (
     <main className="app-shell">
       <header className="app-header">
@@ -138,6 +154,14 @@ function App() {
           onSortOptionChange={setSortOption}
           onResetFilters={handleResetFilters}
         />
+      </section>
+
+      <section
+        className="tool-section"
+        aria-labelledby="data-management-heading"
+      >
+        <h2 id="data-management-heading">データ管理</h2>
+        <TaskImportExport tasks={tasks} onImportTasks={handleImportTasks} />
       </section>
 
       <section className="task-section" aria-labelledby="task-list-heading">

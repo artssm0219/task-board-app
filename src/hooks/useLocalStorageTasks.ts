@@ -1,74 +1,15 @@
 import { useCallback, useRef, useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
-import type { Priority, Task, TaskStatus } from '../types/task'
-import { normalizeDescription, normalizeDueDate } from '../utils/taskUtils'
+import type { Task } from '../types/task'
+import { normalizeTasks } from '../utils/taskUtils'
 
 const STORAGE_KEY = 'task-board-app:tasks'
 const SAVE_ERROR_MESSAGE =
   'データを保存できませんでした。ブラウザの容量や設定を確認してください。'
-const priorities: Priority[] = ['high', 'medium', 'low']
-const statuses: TaskStatus[] = ['todo', 'inProgress', 'done']
 
 type StoredTasksState = {
   tasks: Task[]
   error: string | null
-}
-
-const isPriority = (value: unknown): value is Priority =>
-  typeof value === 'string' && priorities.includes(value as Priority)
-
-const isTaskStatus = (value: unknown): value is TaskStatus =>
-  typeof value === 'string' && statuses.includes(value as TaskStatus)
-
-const normalizeStatus = (status: unknown, completed: unknown) => {
-  if (isTaskStatus(status)) {
-    return status
-  }
-
-  if (typeof completed === 'boolean') {
-    return completed ? 'done' : 'todo'
-  }
-
-  return null
-}
-
-const normalizeStoredTask = (value: unknown): Task | null => {
-  if (typeof value !== 'object' || value === null) {
-    return null
-  }
-
-  const task = value as Record<string, unknown>
-  const id = task.id
-  const title = task.title
-  const completed = task.completed
-  const status = normalizeStatus(task.status, completed)
-  const priority = task.priority
-  const category = task.category
-  const createdAt = task.createdAt
-
-  const hasValidBaseFields =
-    typeof id === 'string' &&
-    typeof title === 'string' &&
-    status !== null &&
-    isPriority(priority) &&
-    typeof category === 'string' &&
-    typeof createdAt === 'string' &&
-    !Number.isNaN(Date.parse(createdAt))
-
-  if (!hasValidBaseFields) {
-    return null
-  }
-
-  return {
-    id,
-    title,
-    description: normalizeDescription(task.description),
-    status,
-    priority,
-    category,
-    createdAt,
-    dueDate: normalizeDueDate(task.dueDate),
-  }
 }
 
 const readTasksFromStorage = (): StoredTasksState => {
@@ -89,20 +30,14 @@ const readTasksFromStorage = (): StoredTasksState => {
       }
     }
 
-    const normalizedTasks: Task[] = []
+    const normalizedTasks = normalizeTasks(parsedTasks)
 
-    for (const parsedTask of parsedTasks) {
-      const normalizedTask = normalizeStoredTask(parsedTask)
-
-      if (normalizedTask === null) {
-        return {
-          tasks: [],
-          error:
-            '保存データを読み込めなかったため、初期状態で表示しています。',
-        }
+    if (normalizedTasks === null) {
+      return {
+        tasks: [],
+        error:
+          '保存データを読み込めなかったため、初期状態で表示しています。',
       }
-
-      normalizedTasks.push(normalizedTask)
     }
 
     return { tasks: normalizedTasks, error: null }

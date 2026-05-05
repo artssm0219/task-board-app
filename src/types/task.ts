@@ -8,6 +8,8 @@ export type PriorityFilter = 'all' | Priority
 
 export type ViewMode = 'list' | 'board'
 
+export type TaskImportMode = 'replace' | 'append'
+
 export type DueDateStatus = 'none' | 'overdue' | 'today' | 'soon' | 'later'
 
 export type SortOption =
@@ -40,6 +42,13 @@ export type TaskDraft = {
 }
 
 export type TaskUpdate = TaskDraft
+
+export type TaskExportFile = {
+  version: 1
+  exportedAt: string
+  app: 'task-board-app'
+  tasks: Task[]
+}
 
 export type TaskFilters = {
   searchQuery: string

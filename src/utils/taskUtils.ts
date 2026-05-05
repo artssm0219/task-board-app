@@ -1,7 +1,9 @@
 import type {
   DueDateStatus,
+  Priority,
   Task,
   TaskDraft,
+  TaskExportFile,
   TaskFilters,
   TaskSummary,
   TaskUpdate,
@@ -10,9 +12,13 @@ import type {
 } from '../types/task'
 
 const FALLBACK_CATEGORY = '未分類'
+const TASK_EXPORT_VERSION = 1
+const TASK_EXPORT_APP = 'task-board-app'
 const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000
 const SOON_DUE_DAYS = 3
+const priorities: Priority[] = ['high', 'medium', 'low']
+const statuses: TaskStatus[] = ['todo', 'inProgress', 'done']
 const priorityRanks = {
   high: 3,
   medium: 2,
@@ -25,7 +31,7 @@ const statusRanks: Record<TaskStatus, number> = {
   done: 3,
 }
 
-const createId = () => {
+export const createTaskId = () => {
   if (globalThis.crypto?.randomUUID) {
     return globalThis.crypto.randomUUID()
   }
@@ -33,8 +39,15 @@ const createId = () => {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`
 }
 
+export const createTaskExportFile = (tasks: Task[]): TaskExportFile => ({
+  version: TASK_EXPORT_VERSION,
+  exportedAt: new Date().toISOString(),
+  app: TASK_EXPORT_APP,
+  tasks,
+})
+
 export const createTask = (draft: TaskDraft): Task => ({
-  id: createId(),
+  id: createTaskId(),
   title: draft.title.trim(),
   description: normalizeDescription(draft.description),
   status: draft.status,
@@ -62,6 +75,27 @@ export const normalizeDescription = (value: unknown): string => {
   return value.trim()
 }
 
+const isPriority = (value: unknown): value is Priority =>
+  typeof value === 'string' && priorities.includes(value as Priority)
+
+const isTaskStatus = (value: unknown): value is TaskStatus =>
+  typeof value === 'string' && statuses.includes(value as TaskStatus)
+
+const normalizeStatus = (
+  status: unknown,
+  completed: unknown,
+): TaskStatus | null => {
+  if (isTaskStatus(status)) {
+    return status
+  }
+
+  if (typeof completed === 'boolean') {
+    return completed ? 'done' : 'todo'
+  }
+
+  return null
+}
+
 export const normalizeDueDate = (value: unknown): string | null => {
   if (typeof value !== 'string') {
     return null
@@ -85,6 +119,60 @@ export const normalizeDueDate = (value: unknown): string | null => {
   }
 
   return dateKey
+}
+
+export const normalizeTask = (value: unknown): Task | null => {
+  if (typeof value !== 'object' || value === null) {
+    return null
+  }
+
+  const task = value as Record<string, unknown>
+  const id = task.id
+  const title = task.title
+  const status = normalizeStatus(task.status, task.completed)
+  const priority = task.priority
+  const category = task.category
+  const createdAt = task.createdAt
+
+  const hasValidBaseFields =
+    typeof id === 'string' &&
+    typeof title === 'string' &&
+    status !== null &&
+    isPriority(priority) &&
+    typeof category === 'string' &&
+    typeof createdAt === 'string' &&
+    !Number.isNaN(Date.parse(createdAt))
+
+  if (!hasValidBaseFields) {
+    return null
+  }
+
+  return {
+    id,
+    title,
+    description: normalizeDescription(task.description),
+    status,
+    priority,
+    category,
+    createdAt,
+    dueDate: normalizeDueDate(task.dueDate),
+  }
+}
+
+export const normalizeTasks = (values: unknown[]): Task[] | null => {
+  const normalizedTasks: Task[] = []
+
+  for (const value of values) {
+    const normalizedTask = normalizeTask(value)
+
+    if (normalizedTask === null) {
+      return null
+    }
+
+    normalizedTasks.push(normalizedTask)
+  }
+
+  return normalizedTasks
 }
 
 export const getTodayDateKey = () => {
