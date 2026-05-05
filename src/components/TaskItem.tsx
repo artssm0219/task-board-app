@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { TaskEditForm } from './TaskEditForm'
-import type { Task, TaskStatus } from '../types/task'
+import type { DueDateStatus, Task, TaskStatus } from '../types/task'
 import type { TaskUpdate } from '../types/task'
 import { priorityLabels, taskStatusLabels } from '../types/task'
-import { isOverdueTask } from '../utils/taskUtils'
+import { getDaysUntilDueDate, getDueDateStatus } from '../utils/taskUtils'
 
 type TaskItemProps = {
   task: Task
@@ -48,6 +48,60 @@ const formatDateKey = (dateKey: string) => {
   }).format(new Date(year, month - 1, day))
 }
 
+const getDueDateBadgeText = (
+  task: Task,
+  dueDateStatus: DueDateStatus,
+  daysUntilDueDate: number | null,
+) => {
+  if (!task.dueDate || dueDateStatus === 'none') {
+    return '期限なし'
+  }
+
+  const dueDateText = formatDateKey(task.dueDate)
+
+  if (task.status === 'done') {
+    return `期限: ${dueDateText}`
+  }
+
+  switch (dueDateStatus) {
+    case 'overdue':
+      return `期限切れ: ${dueDateText}`
+    case 'today':
+      return `今日が期限: ${dueDateText}`
+    case 'soon':
+      return `あと${daysUntilDueDate}日: ${dueDateText}`
+    case 'later':
+      return `期限: ${dueDateText}`
+  }
+}
+
+const getDueDateAriaLabel = (
+  task: Task,
+  dueDateStatus: DueDateStatus,
+  daysUntilDueDate: number | null,
+) => {
+  if (!task.dueDate || dueDateStatus === 'none') {
+    return `${task.title}の期限は設定されていません`
+  }
+
+  const dueDateText = formatDateKey(task.dueDate)
+
+  if (task.status === 'done') {
+    return `${task.title}は完了済みです。期限は${dueDateText}です`
+  }
+
+  switch (dueDateStatus) {
+    case 'overdue':
+      return `${task.title}は${dueDateText}が期限で、期限切れです`
+    case 'today':
+      return `${task.title}は今日が期限です`
+    case 'soon':
+      return `${task.title}は${dueDateText}が期限で、あと${daysUntilDueDate}日です`
+    case 'later':
+      return `${task.title}は${dueDateText}が期限で、期限に余裕があります`
+  }
+}
+
 export const TaskItem = ({
   task,
   onStatusChange,
@@ -55,7 +109,11 @@ export const TaskItem = ({
   onDeleteTask,
 }: TaskItemProps) => {
   const [isEditing, setIsEditing] = useState(false)
-  const isOverdue = isOverdueTask(task)
+  const dueDateStatus = getDueDateStatus(task)
+  const daysUntilDueDate = task.dueDate
+    ? getDaysUntilDueDate(task.dueDate)
+    : null
+  const isOverdue = dueDateStatus === 'overdue'
 
   const handleSave = (taskId: string, taskUpdate: TaskUpdate) => {
     onUpdateTask(taskId, taskUpdate)
@@ -65,6 +123,7 @@ export const TaskItem = ({
   const taskItemClassName = [
     'task-item',
     `task-item--status-${task.status}`,
+    `task-item--due-${dueDateStatus}`,
     isOverdue ? 'task-item--overdue' : '',
   ]
     .filter(Boolean)
@@ -99,16 +158,16 @@ export const TaskItem = ({
           <span className={`priority-badge priority-badge--${task.priority}`}>
             優先度: {priorityLabels[task.priority]}
           </span>
-          {task.dueDate ? (
-            <span
-              className={
-                isOverdue ? 'due-date-badge due-date-badge--overdue' : 'due-date-badge'
-              }
-            >
-              期限: {formatDateKey(task.dueDate)}
-              {isOverdue ? '（期限切れ）' : ''}
-            </span>
-          ) : null}
+          <span
+            className={`due-date-badge due-date-badge--${dueDateStatus}`}
+            aria-label={getDueDateAriaLabel(
+              task,
+              dueDateStatus,
+              daysUntilDueDate,
+            )}
+          >
+            {getDueDateBadgeText(task, dueDateStatus, daysUntilDueDate)}
+          </span>
           <time dateTime={task.createdAt}>{formatDate(task.createdAt)}</time>
         </div>
       </div>

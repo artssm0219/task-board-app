@@ -9,6 +9,7 @@ type TaskBoardProps = {
   onStatusChange: (taskId: string, status: TaskStatus) => void
   onUpdateTask: (taskId: string, taskUpdate: TaskUpdate) => void
   onDeleteTask: (taskId: string) => void
+  onResetFilters: () => void
 }
 
 const taskStatuses: TaskStatus[] = ['todo', 'inProgress', 'done']
@@ -19,16 +20,24 @@ export const TaskBoard = ({
   onStatusChange,
   onUpdateTask,
   onDeleteTask,
+  onResetFilters,
 }: TaskBoardProps) => {
   if (tasks.length === 0) {
     return (
       <EmptyState
-        title={hasFilters ? '条件に合うタスクがありません' : 'タスクはまだありません'}
+        title={
+          hasFilters
+            ? '条件に一致するタスクがありません'
+            : '最初のタスクを追加しましょう'
+        }
         message={
           hasFilters
-            ? '検索キーワードやフィルタを変えると、別のタスクが見つかるかもしれません。'
-            : '上のフォームから最初のタスクを追加できます。'
+            ? '検索キーワードやフィルタを見直すと、別のタスクが見つかるかもしれません。'
+            : '上のフォームからタスク名、優先度、期限日を設定して追加できます。'
         }
+        actionLabel={hasFilters ? 'フィルタをリセット' : undefined}
+        onAction={hasFilters ? onResetFilters : undefined}
+        variant={hasFilters ? 'filtered' : 'start'}
       />
     )
   }
@@ -62,7 +71,9 @@ export const TaskBoard = ({
                 ))}
               </ul>
             ) : (
-              <p className="task-board__empty">タスクはありません</p>
+              <div className="task-board__empty">
+                <p>{taskStatusLabels[status]}のタスクはありません</p>
+              </div>
             )}
           </section>
         )

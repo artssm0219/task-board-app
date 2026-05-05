@@ -1,4 +1,5 @@
 import type {
+  DueDateStatus,
   Task,
   TaskDraft,
   TaskFilters,
@@ -10,6 +11,8 @@ import type {
 
 const FALLBACK_CATEGORY = '未分類'
 const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000
+const SOON_DUE_DAYS = 3
 const priorityRanks = {
   high: 3,
   medium: 2,
@@ -83,10 +86,59 @@ export const getTodayDateKey = () => {
   return `${year}-${month}-${day}`
 }
 
+const getDateKeyTime = (dateKey: string) => {
+  const [year, month, day] = dateKey.split('-').map(Number)
+
+  return Date.UTC(year, month - 1, day)
+}
+
+export const getDaysUntilDueDate = (
+  dueDate: string,
+  todayDateKey = getTodayDateKey(),
+) =>
+  Math.round(
+    (getDateKeyTime(dueDate) - getDateKeyTime(todayDateKey)) /
+      MILLISECONDS_PER_DAY,
+  )
+
+export const getDueDateStatus = (
+  task: Task,
+  todayDateKey = getTodayDateKey(),
+): DueDateStatus => {
+  if (!task.dueDate) {
+    return 'none'
+  }
+
+  if (task.status === 'done') {
+    return 'later'
+  }
+
+  const daysUntilDueDate = getDaysUntilDueDate(task.dueDate, todayDateKey)
+
+  if (daysUntilDueDate < 0) {
+    return 'overdue'
+  }
+
+  if (daysUntilDueDate === 0) {
+    return 'today'
+  }
+
+  if (daysUntilDueDate <= SOON_DUE_DAYS) {
+    return 'soon'
+  }
+
+  return 'later'
+}
+
 export const isOverdueTask = (
   task: Task,
   todayDateKey = getTodayDateKey(),
 ) => Boolean(task.dueDate && task.status !== 'done' && task.dueDate < todayDateKey)
+
+export const isDueTodayTask = (
+  task: Task,
+  todayDateKey = getTodayDateKey(),
+) => Boolean(task.dueDate && task.status !== 'done' && task.dueDate === todayDateKey)
 
 export const getTaskSummary = (tasks: Task[]): TaskSummary => {
   const todayDateKey = getTodayDateKey()
@@ -99,6 +151,7 @@ export const getTaskSummary = (tasks: Task[]): TaskSummary => {
         summary.inProgress + (task.status === 'inProgress' ? 1 : 0),
       done: summary.done + (task.status === 'done' ? 1 : 0),
       highPriority: summary.highPriority + (task.priority === 'high' ? 1 : 0),
+      dueToday: summary.dueToday + (isDueTodayTask(task, todayDateKey) ? 1 : 0),
       overdue: summary.overdue + (isOverdueTask(task, todayDateKey) ? 1 : 0),
     }),
     {
@@ -107,6 +160,7 @@ export const getTaskSummary = (tasks: Task[]): TaskSummary => {
       inProgress: 0,
       done: 0,
       highPriority: 0,
+      dueToday: 0,
       overdue: 0,
     },
   )

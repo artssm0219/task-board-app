@@ -157,6 +157,7 @@ function App() {
             onStatusChange={handleStatusChange}
             onUpdateTask={handleUpdateTask}
             onDeleteTask={handleDeleteTask}
+            onResetFilters={handleResetFilters}
           />
         ) : (
           <TaskBoard
@@ -165,6 +166,7 @@ function App() {
             onStatusChange={handleStatusChange}
             onUpdateTask={handleUpdateTask}
             onDeleteTask={handleDeleteTask}
+            onResetFilters={handleResetFilters}
           />
         )}
       </section>

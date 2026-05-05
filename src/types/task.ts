@@ -8,6 +8,8 @@ export type PriorityFilter = 'all' | Priority
 
 export type ViewMode = 'list' | 'board'
 
+export type DueDateStatus = 'none' | 'overdue' | 'today' | 'soon' | 'later'
+
 export type SortOption =
   | 'created-desc'
   | 'created-asc'
@@ -49,6 +51,7 @@ export type TaskSummary = {
   inProgress: number
   done: number
   highPriority: number
+  dueToday: number
   overdue: number
 }
 
