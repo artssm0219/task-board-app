@@ -9,6 +9,8 @@ import { getDaysUntilDueDate, getDueDateStatus } from '../utils/taskUtils'
 type TaskItemProps = {
   task: Task
   displayMode?: 'list' | 'board'
+  isDescriptionExpanded?: boolean
+  onToggleDescription?: (taskId: string) => void
   onStatusChange: (taskId: string, status: TaskStatus) => void
   onUpdateTask: (taskId: string, taskUpdate: TaskUpdate) => void
   onDeleteTask: (taskId: string) => void
@@ -110,12 +112,15 @@ const getDueDateAriaLabel = (
 export const TaskItem = ({
   task,
   displayMode = 'list',
+  isDescriptionExpanded,
+  onToggleDescription,
   onStatusChange,
   onUpdateTask,
   onDeleteTask,
 }: TaskItemProps) => {
   const [isEditing, setIsEditing] = useState(false)
-  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
+  const [isLocalDescriptionExpanded, setIsLocalDescriptionExpanded] =
+    useState(false)
   const descriptionId = useId()
   const dueDateStatus = getDueDateStatus(task)
   const daysUntilDueDate = task.dueDate
@@ -127,15 +132,26 @@ export const TaskItem = ({
   const isDescriptionExpandable =
     task.description.length > DESCRIPTION_PREVIEW_LENGTH ||
     descriptionLineCount > DESCRIPTION_PREVIEW_LINES
-  const shouldShowDescriptionToggle =
-    displayMode === 'list' && isDescriptionExpandable
+  const descriptionExpanded =
+    isDescriptionExpanded ?? isLocalDescriptionExpanded
+  const shouldShowDescriptionToggle = isDescriptionExpandable
   const shouldCollapseDescription =
-    (displayMode === 'board' && hasDescription) ||
-    (shouldShowDescriptionToggle && !isDescriptionExpanded)
+    shouldShowDescriptionToggle && !descriptionExpanded
 
   const handleSave = (taskId: string, taskUpdate: TaskUpdate) => {
     onUpdateTask(taskId, taskUpdate)
     setIsEditing(false)
+  }
+
+  const handleToggleDescription = () => {
+    if (onToggleDescription) {
+      onToggleDescription(task.id)
+      return
+    }
+
+    setIsLocalDescriptionExpanded(
+      (currentIsDescriptionExpanded) => !currentIsDescriptionExpanded,
+    )
   }
 
   const taskItemClassName = [
@@ -193,15 +209,10 @@ export const TaskItem = ({
                 className="task-description__toggle"
                 type="button"
                 aria-controls={descriptionId}
-                aria-expanded={isDescriptionExpanded}
-                onClick={() =>
-                  setIsDescriptionExpanded(
-                    (currentIsDescriptionExpanded) =>
-                      !currentIsDescriptionExpanded,
-                  )
-                }
+                aria-expanded={descriptionExpanded}
+                onClick={handleToggleDescription}
               >
-                {isDescriptionExpanded ? '閉じる' : 'もっと見る'}
+                {descriptionExpanded ? '折りたたむ' : 'もっと見る'}
               </button>
             ) : null}
           </div>

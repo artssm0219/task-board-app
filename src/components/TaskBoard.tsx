@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { EmptyState } from './EmptyState'
 import { TaskItem } from './TaskItem'
 import type { Task, TaskStatus, TaskUpdate } from '../types/task'
@@ -22,6 +23,24 @@ export const TaskBoard = ({
   onDeleteTask,
   onResetFilters,
 }: TaskBoardProps) => {
+  const [expandedDescriptionTaskIds, setExpandedDescriptionTaskIds] = useState<
+    Set<string>
+  >(() => new Set())
+
+  const handleToggleDescription = (taskId: string) => {
+    setExpandedDescriptionTaskIds((currentTaskIds) => {
+      const nextTaskIds = new Set(currentTaskIds)
+
+      if (nextTaskIds.has(taskId)) {
+        nextTaskIds.delete(taskId)
+      } else {
+        nextTaskIds.add(taskId)
+      }
+
+      return nextTaskIds
+    })
+  }
+
   if (tasks.length === 0) {
     return (
       <EmptyState
@@ -65,6 +84,10 @@ export const TaskBoard = ({
                     key={task.id}
                     task={task}
                     displayMode="board"
+                    isDescriptionExpanded={expandedDescriptionTaskIds.has(
+                      task.id,
+                    )}
+                    onToggleDescription={handleToggleDescription}
                     onStatusChange={onStatusChange}
                     onUpdateTask={onUpdateTask}
                     onDeleteTask={onDeleteTask}
