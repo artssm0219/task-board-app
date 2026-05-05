@@ -140,14 +140,19 @@ h2 {
 
 .task-filters {
   grid-template-columns:
-    minmax(220px, 1.3fr) minmax(240px, 1fr) 130px
-    minmax(180px, 0.9fr) auto;
+    minmax(180px, 1.2fr) minmax(220px, 1.1fr) minmax(120px, 0.7fr)
+    minmax(170px, 0.9fr) minmax(96px, auto);
   align-items: end;
+}
+
+.task-filters > * {
+  min-width: 0;
 }
 
 .field {
   display: grid;
   gap: 6px;
+  min-width: 0;
 }
 
 .field label,
@@ -490,6 +495,21 @@ button:focus-visible {
 
   .task-filters .secondary-button {
     grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 861px) and (max-width: 1120px) {
+  .task-filters {
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 1fr) minmax(0, 1fr);
+  }
+
+  .task-filters__search,
+  .segmented-control {
+    grid-column: span 1;
+  }
+
+  .task-filters .secondary-button {
+    width: 100%;
   }
 }
 
