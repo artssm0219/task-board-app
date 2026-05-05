@@ -370,7 +370,7 @@ button:focus-visible {
 
 .task-item {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(210px, 240px) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 12px;
   min-height: 82px;
@@ -490,21 +490,25 @@ button:focus-visible {
 }
 
 .task-status-actions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
   min-width: 0;
 }
 
 .status-action-button {
-  width: 100%;
-  min-height: 40px;
-  padding: 0 10px;
+  flex: 0 0 auto;
+  min-width: 64px;
+  min-height: 36px;
+  padding: 0 12px;
   border: 1px solid transparent;
   border-radius: 6px;
+  font-size: 0.88rem;
   font-weight: 750;
   line-height: 1.2;
   text-align: center;
+  white-space: nowrap;
 }
 
 .status-action-button--todo {
@@ -694,7 +698,17 @@ button:focus-visible {
 }
 
 .task-board .task-status-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   width: 100%;
+  gap: 8px;
+  justify-content: stretch;
+}
+
+.task-board .status-action-button {
+  width: 100%;
+  min-width: 0;
+  padding-inline: 8px;
 }
 
 .task-board .task-actions {
@@ -816,10 +830,16 @@ button:focus-visible {
   }
 
   .task-status-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
+    gap: 8px;
+    justify-content: stretch;
   }
 
   .status-action-button {
+    width: 100%;
+    min-width: 0;
     min-height: 44px;
   }
 

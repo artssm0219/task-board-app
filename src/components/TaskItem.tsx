@@ -15,20 +15,21 @@ type TaskItemProps = {
 type StatusAction = {
   status: TaskStatus
   label: string
+  ariaLabel: string
 }
 
 const statusActionsByStatus: Record<TaskStatus, StatusAction[]> = {
   todo: [
-    { status: 'inProgress', label: '進行中にする' },
-    { status: 'done', label: '完了にする' },
+    { status: 'inProgress', label: '開始', ariaLabel: '進行中にする' },
+    { status: 'done', label: '完了', ariaLabel: '完了にする' },
   ],
   inProgress: [
-    { status: 'todo', label: '未着手に戻す' },
-    { status: 'done', label: '完了にする' },
+    { status: 'todo', label: '未着手', ariaLabel: '未着手に戻す' },
+    { status: 'done', label: '完了', ariaLabel: '完了にする' },
   ],
   done: [
-    { status: 'todo', label: '未着手に戻す' },
-    { status: 'inProgress', label: '進行中に戻す' },
+    { status: 'todo', label: '未着手', ariaLabel: '未着手に戻す' },
+    { status: 'inProgress', label: '再開', ariaLabel: '進行中に戻す' },
   ],
 }
 
@@ -122,7 +123,7 @@ export const TaskItem = ({
             key={action.status}
             className={`status-action-button status-action-button--${action.status}`}
             type="button"
-            aria-label={`${task.title}を${action.label}`}
+            aria-label={`${task.title}を${action.ariaLabel}`}
             onClick={() => onStatusChange(task.id, action.status)}
           >
             {action.label}
