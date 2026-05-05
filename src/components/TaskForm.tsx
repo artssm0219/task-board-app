@@ -13,6 +13,7 @@ const taskStatuses: TaskStatus[] = ['todo', 'inProgress', 'done']
 
 export const TaskForm = ({ onAddTask }: TaskFormProps) => {
   const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
   const [category, setCategory] = useState('')
   const [status, setStatus] = useState<TaskStatus>(defaultStatus)
   const [priority, setPriority] = useState<Priority>(defaultPriority)
@@ -26,8 +27,16 @@ export const TaskForm = ({ onAddTask }: TaskFormProps) => {
       return
     }
 
-    onAddTask({ title, category, status, priority, dueDate: dueDate || null })
+    onAddTask({
+      title,
+      description,
+      category,
+      status,
+      priority,
+      dueDate: dueDate || null,
+    })
     setTitle('')
+    setDescription('')
     setCategory('')
     setStatus(defaultStatus)
     setPriority(defaultPriority)
@@ -100,6 +109,17 @@ export const TaskForm = ({ onAddTask }: TaskFormProps) => {
           type="date"
           value={dueDate}
           onChange={(event) => setDueDate(event.target.value)}
+        />
+      </div>
+
+      <div className="field task-form__description">
+        <label htmlFor="task-description">メモ</label>
+        <textarea
+          id="task-description"
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
+          placeholder="補足、背景、次にやることなど"
+          rows={3}
         />
       </div>
 

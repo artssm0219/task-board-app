@@ -22,6 +22,7 @@ export type SortOption =
 export type Task = {
   id: string
   title: string
+  description: string
   status: TaskStatus
   priority: Priority
   category: string
@@ -31,6 +32,7 @@ export type Task = {
 
 export type TaskDraft = {
   title: string
+  description: string
   status: TaskStatus
   priority: Priority
   category: string

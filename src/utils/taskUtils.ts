@@ -36,6 +36,7 @@ const createId = () => {
 export const createTask = (draft: TaskDraft): Task => ({
   id: createId(),
   title: draft.title.trim(),
+  description: normalizeDescription(draft.description),
   status: draft.status,
   priority: draft.priority,
   category: draft.category.trim() || FALLBACK_CATEGORY,
@@ -46,11 +47,20 @@ export const createTask = (draft: TaskDraft): Task => ({
 export const applyTaskUpdate = (task: Task, update: TaskUpdate): Task => ({
   ...task,
   title: update.title.trim(),
+  description: normalizeDescription(update.description),
   status: update.status,
   priority: update.priority,
   category: update.category.trim() || FALLBACK_CATEGORY,
   dueDate: normalizeDueDate(update.dueDate),
 })
+
+export const normalizeDescription = (value: unknown): string => {
+  if (typeof value !== 'string') {
+    return ''
+  }
+
+  return value.trim()
+}
 
 export const normalizeDueDate = (value: unknown): string | null => {
   if (typeof value !== 'string') {
@@ -173,6 +183,7 @@ export const filterTasks = (tasks: Task[], filters: TaskFilters) => {
     const matchesSearch =
       query.length === 0 ||
       task.title.toLowerCase().includes(query) ||
+      task.description.toLowerCase().includes(query) ||
       task.category.toLowerCase().includes(query)
 
     const matchesStatus =

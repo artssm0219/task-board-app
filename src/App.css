@@ -182,20 +182,38 @@ h2 {
 }
 
 .field input,
-.field select {
+.field select,
+.field textarea {
   width: 100%;
-  min-height: 44px;
-  padding: 0 12px;
+  min-width: 0;
   border: 1px solid var(--line);
   border-radius: 6px;
   color: var(--input-text);
   background: var(--input-bg);
 }
 
+.field input,
+.field select {
+  min-height: 44px;
+  padding: 0 12px;
+}
+
+.field textarea {
+  min-height: 92px;
+  max-width: 100%;
+  padding: 10px 12px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
 .field-hint {
   color: var(--muted);
   font-size: 0.78rem;
   line-height: 1.35;
+}
+
+.task-form__description {
+  grid-column: 1 / -2;
 }
 
 .task-form .primary-button {
@@ -205,6 +223,7 @@ h2 {
 
 .field input:focus,
 .field select:focus,
+.field textarea:focus,
 .segmented-control input:focus-visible + span,
 .view-mode-toggle__option input:focus-visible + span,
 button:focus-visible {
@@ -440,6 +459,45 @@ button:focus-visible {
 .task-title--done {
   color: var(--muted);
   text-decoration: line-through;
+}
+
+.task-description {
+  display: grid;
+  max-width: 100%;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.task-description__text {
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.task-description__text--collapsed {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.task-description__toggle {
+  justify-self: start;
+  min-height: 30px;
+  padding: 0;
+  border: 0;
+  color: var(--primary);
+  background: transparent;
+  font-size: 0.84rem;
+  font-weight: 750;
+  line-height: 1;
+}
+
+.task-description__toggle:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
 }
 
 .task-meta {
@@ -856,6 +914,7 @@ button:focus-visible {
   }
 
   .task-form__title,
+  .task-form__description,
   .task-filters__search,
   .segmented-control {
     grid-column: 1 / -1;

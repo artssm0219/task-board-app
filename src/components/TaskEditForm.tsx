@@ -17,6 +17,7 @@ export const TaskEditForm = ({
   onCancel,
 }: TaskEditFormProps) => {
   const [title, setTitle] = useState(task.title)
+  const [description, setDescription] = useState(task.description)
   const [category, setCategory] = useState(task.category)
   const [status, setStatus] = useState<TaskStatus>(task.status)
   const [priority, setPriority] = useState<Priority>(task.priority)
@@ -32,6 +33,7 @@ export const TaskEditForm = ({
 
     onSave(task.id, {
       title,
+      description,
       category,
       status,
       priority,
@@ -51,6 +53,16 @@ export const TaskEditForm = ({
           value={title}
           onChange={(event) => setTitle(event.target.value)}
           required
+        />
+      </div>
+
+      <div className="field">
+        <label htmlFor={`edit-description-${task.id}`}>メモ</label>
+        <textarea
+          id={`edit-description-${task.id}`}
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
+          rows={4}
         />
       </div>
 

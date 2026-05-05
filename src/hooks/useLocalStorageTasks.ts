@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import type { Priority, Task, TaskStatus } from '../types/task'
-import { normalizeDueDate } from '../utils/taskUtils'
+import { normalizeDescription, normalizeDueDate } from '../utils/taskUtils'
 
 const STORAGE_KEY = 'task-board-app:tasks'
 const SAVE_ERROR_MESSAGE =
@@ -62,6 +62,7 @@ const normalizeStoredTask = (value: unknown): Task | null => {
   return {
     id,
     title,
+    description: normalizeDescription(task.description),
     status,
     priority,
     category,

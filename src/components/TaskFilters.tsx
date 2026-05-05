@@ -48,7 +48,7 @@ export const TaskFilters = ({
         type="search"
         value={searchQuery}
         onChange={(event) => onSearchChange(event.target.value)}
-        placeholder="タスク名・カテゴリで検索"
+        placeholder="タスク名・カテゴリ・メモで検索"
       />
     </div>
 

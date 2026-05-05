@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { TaskEditForm } from './TaskEditForm'
 import type { DueDateStatus, Task, TaskStatus } from '../types/task'
 import type { TaskUpdate } from '../types/task'
@@ -17,6 +17,9 @@ type StatusAction = {
   label: string
   ariaLabel: string
 }
+
+const DESCRIPTION_PREVIEW_LENGTH = 120
+const DESCRIPTION_PREVIEW_LINES = 3
 
 const statusActionsByStatus: Record<TaskStatus, StatusAction[]> = {
   todo: [
@@ -109,11 +112,18 @@ export const TaskItem = ({
   onDeleteTask,
 }: TaskItemProps) => {
   const [isEditing, setIsEditing] = useState(false)
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
+  const descriptionId = useId()
   const dueDateStatus = getDueDateStatus(task)
   const daysUntilDueDate = task.dueDate
     ? getDaysUntilDueDate(task.dueDate)
     : null
   const isOverdue = dueDateStatus === 'overdue'
+  const descriptionLineCount = task.description.split(/\r\n|\r|\n/).length
+  const hasDescription = task.description.length > 0
+  const isDescriptionExpandable =
+    task.description.length > DESCRIPTION_PREVIEW_LENGTH ||
+    descriptionLineCount > DESCRIPTION_PREVIEW_LINES
 
   const handleSave = (taskId: string, taskUpdate: TaskUpdate) => {
     onUpdateTask(taskId, taskUpdate)
@@ -150,6 +160,36 @@ export const TaskItem = ({
         >
           {task.title}
         </p>
+        {hasDescription ? (
+          <div className="task-description">
+            <p
+              id={descriptionId}
+              className={
+                isDescriptionExpandable && !isDescriptionExpanded
+                  ? 'task-description__text task-description__text--collapsed'
+                  : 'task-description__text'
+              }
+            >
+              {task.description}
+            </p>
+            {isDescriptionExpandable ? (
+              <button
+                className="task-description__toggle"
+                type="button"
+                aria-controls={descriptionId}
+                aria-expanded={isDescriptionExpanded}
+                onClick={() =>
+                  setIsDescriptionExpanded(
+                    (currentIsDescriptionExpanded) =>
+                      !currentIsDescriptionExpanded,
+                  )
+                }
+              >
+                {isDescriptionExpanded ? '閉じる' : 'もっと見る'}
+              </button>
+            ) : null}
+          </div>
+        ) : null}
         <div className="task-meta">
           <span className={`status-badge status-badge--${task.status}`}>
             {taskStatusLabels[task.status]}
