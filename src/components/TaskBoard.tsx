@@ -64,6 +64,7 @@ export const TaskBoard = ({
                   <TaskItem
                     key={task.id}
                     task={task}
+                    displayMode="board"
                     onStatusChange={onStatusChange}
                     onUpdateTask={onUpdateTask}
                     onDeleteTask={onDeleteTask}

@@ -1,4 +1,5 @@
 import { useId, useState } from 'react'
+import { TaskEditModal } from './TaskEditModal'
 import { TaskEditForm } from './TaskEditForm'
 import type { DueDateStatus, Task, TaskStatus } from '../types/task'
 import type { TaskUpdate } from '../types/task'
@@ -7,6 +8,7 @@ import { getDaysUntilDueDate, getDueDateStatus } from '../utils/taskUtils'
 
 type TaskItemProps = {
   task: Task
+  displayMode?: 'list' | 'board'
   onStatusChange: (taskId: string, status: TaskStatus) => void
   onUpdateTask: (taskId: string, taskUpdate: TaskUpdate) => void
   onDeleteTask: (taskId: string) => void
@@ -107,6 +109,7 @@ const getDueDateAriaLabel = (
 
 export const TaskItem = ({
   task,
+  displayMode = 'list',
   onStatusChange,
   onUpdateTask,
   onDeleteTask,
@@ -124,6 +127,11 @@ export const TaskItem = ({
   const isDescriptionExpandable =
     task.description.length > DESCRIPTION_PREVIEW_LENGTH ||
     descriptionLineCount > DESCRIPTION_PREVIEW_LINES
+  const shouldShowDescriptionToggle =
+    displayMode === 'list' && isDescriptionExpandable
+  const shouldCollapseDescription =
+    (displayMode === 'board' && hasDescription) ||
+    (shouldShowDescriptionToggle && !isDescriptionExpanded)
 
   const handleSave = (taskId: string, taskUpdate: TaskUpdate) => {
     onUpdateTask(taskId, taskUpdate)
@@ -140,7 +148,7 @@ export const TaskItem = ({
     .join(' ')
   const statusActions = statusActionsByStatus[task.status]
 
-  if (isEditing) {
+  if (isEditing && displayMode === 'list') {
     return (
       <li className="task-item task-item--editing">
         <TaskEditForm
@@ -154,6 +162,14 @@ export const TaskItem = ({
 
   return (
     <li className={taskItemClassName}>
+      {isEditing && displayMode === 'board' ? (
+        <TaskEditModal
+          task={task}
+          onSave={handleSave}
+          onCancel={() => setIsEditing(false)}
+        />
+      ) : null}
+
       <div className="task-item__content">
         <p
           className={task.status === 'done' ? 'task-title task-title--done' : 'task-title'}
@@ -165,14 +181,14 @@ export const TaskItem = ({
             <p
               id={descriptionId}
               className={
-                isDescriptionExpandable && !isDescriptionExpanded
+                shouldCollapseDescription
                   ? 'task-description__text task-description__text--collapsed'
                   : 'task-description__text'
               }
             >
               {task.description}
             </p>
-            {isDescriptionExpandable ? (
+            {shouldShowDescriptionToggle ? (
               <button
                 className="task-description__toggle"
                 type="button"
