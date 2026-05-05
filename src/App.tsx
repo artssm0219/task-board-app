@@ -3,13 +3,20 @@ import './App.css'
 import { TaskFilters } from './components/TaskFilters'
 import { TaskForm } from './components/TaskForm'
 import { TaskList } from './components/TaskList'
+import { TaskSummary } from './components/TaskSummary'
 import { useLocalStorageTasks } from './hooks/useLocalStorageTasks'
 import type {
   PriorityFilter,
   StatusFilter,
   TaskDraft,
+  TaskUpdate,
 } from './types/task'
-import { createTask, filterTasks } from './utils/taskUtils'
+import {
+  applyTaskUpdate,
+  createTask,
+  filterTasks,
+  getTaskSummary,
+} from './utils/taskUtils'
 
 const initialStatusFilter: StatusFilter = 'all'
 const initialPriorityFilter: PriorityFilter = 'all'
@@ -34,8 +41,7 @@ function App() {
     [priorityFilter, searchQuery, statusFilter, tasks],
   )
 
-  const activeCount = tasks.filter((task) => !task.completed).length
-  const completedCount = tasks.length - activeCount
+  const taskSummary = useMemo(() => getTaskSummary(tasks), [tasks])
   const hasFilters =
     searchQuery.trim().length > 0 ||
     statusFilter !== initialStatusFilter ||
@@ -49,6 +55,14 @@ function App() {
     setTasks((currentTasks) =>
       currentTasks.map((task) =>
         task.id === taskId ? { ...task, completed: !task.completed } : task,
+      ),
+    )
+  }
+
+  const handleUpdateTask = (taskId: string, taskUpdate: TaskUpdate) => {
+    setTasks((currentTasks) =>
+      currentTasks.map((task) =>
+        task.id === taskId ? applyTaskUpdate(task, taskUpdate) : task,
       ),
     )
   }
@@ -73,20 +87,7 @@ function App() {
           <h1>タスク管理</h1>
         </div>
 
-        <dl className="task-stats" aria-label="タスク件数">
-          <div>
-            <dt>全体</dt>
-            <dd>{tasks.length}</dd>
-          </div>
-          <div>
-            <dt>未完了</dt>
-            <dd>{activeCount}</dd>
-          </div>
-          <div>
-            <dt>完了</dt>
-            <dd>{completedCount}</dd>
-          </div>
-        </dl>
+        <TaskSummary summary={taskSummary} />
       </header>
 
       {storageWarning ? (
@@ -132,6 +133,7 @@ function App() {
           tasks={filteredTasks}
           hasFilters={hasFilters}
           onToggleTask={handleToggleTask}
+          onUpdateTask={handleUpdateTask}
           onDeleteTask={handleDeleteTask}
         />
       </section>

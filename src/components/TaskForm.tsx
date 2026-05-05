@@ -12,6 +12,7 @@ export const TaskForm = ({ onAddTask }: TaskFormProps) => {
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState('')
   const [priority, setPriority] = useState<Priority>(defaultPriority)
+  const [dueDate, setDueDate] = useState('')
   const isTitleBlank = title.trim().length === 0
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -21,10 +22,11 @@ export const TaskForm = ({ onAddTask }: TaskFormProps) => {
       return
     }
 
-    onAddTask({ title, category, priority })
+    onAddTask({ title, category, priority, dueDate: dueDate || null })
     setTitle('')
     setCategory('')
     setPriority(defaultPriority)
+    setDueDate('')
   }
 
   return (
@@ -69,6 +71,16 @@ export const TaskForm = ({ onAddTask }: TaskFormProps) => {
           <option value="medium">中</option>
           <option value="low">低</option>
         </select>
+      </div>
+
+      <div className="field">
+        <label htmlFor="task-due-date">期限日</label>
+        <input
+          id="task-due-date"
+          type="date"
+          value={dueDate}
+          onChange={(event) => setDueDate(event.target.value)}
+        />
       </div>
 
       <button className="primary-button" type="submit" disabled={isTitleBlank}>

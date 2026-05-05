@@ -40,15 +40,15 @@ h2 {
   letter-spacing: 0;
 }
 
-.task-stats {
+.task-summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(86px, 1fr));
+  grid-template-columns: repeat(5, minmax(78px, 1fr));
   gap: 8px;
-  min-width: min(380px, 100%);
+  min-width: min(560px, 100%);
   margin: 0;
 }
 
-.task-stats div {
+.task-summary__card {
   min-height: 74px;
   padding: 12px 14px;
   border: 1px solid var(--line);
@@ -57,13 +57,23 @@ h2 {
   box-shadow: var(--shadow);
 }
 
-.task-stats dt {
+.task-summary__card--high {
+  border-color: #ffd1b8;
+  background: var(--high-bg);
+}
+
+.task-summary__card--overdue {
+  border-color: #ffd7d2;
+  background: var(--danger-bg);
+}
+
+.task-summary dt {
   color: var(--muted);
   font-size: 0.78rem;
   line-height: 1.2;
 }
 
-.task-stats dd {
+.task-summary dd {
   margin: 8px 0 0;
   font-size: 1.55rem;
   font-weight: 750;
@@ -122,7 +132,9 @@ h2 {
 }
 
 .task-form {
-  grid-template-columns: minmax(220px, 1.6fr) minmax(160px, 0.9fr) 140px auto;
+  grid-template-columns:
+    minmax(220px, 1.6fr) minmax(150px, 0.9fr) 140px
+    minmax(150px, 0.8fr) auto;
   align-items: start;
 }
 
@@ -345,13 +357,16 @@ button:focus-visible {
 
 .category-label,
 .priority-badge,
+.due-date-badge,
 .task-meta time {
   display: inline-flex;
   align-items: center;
+  max-width: 100%;
   min-height: 26px;
   padding: 3px 8px;
   border-radius: 999px;
   line-height: 1;
+  overflow-wrap: anywhere;
 }
 
 .category-label {
@@ -374,8 +389,60 @@ button:focus-visible {
   background: var(--low-bg);
 }
 
+.due-date-badge {
+  color: var(--primary);
+  background: var(--surface-strong);
+}
+
+.due-date-badge--overdue {
+  color: var(--danger);
+  background: var(--danger-bg);
+}
+
 .task-meta time {
   background: #f1f4f7;
+}
+
+.task-item--overdue {
+  border-color: #f7bbb4;
+}
+
+.task-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.task-actions .secondary-button,
+.task-actions .danger-button {
+  min-width: 64px;
+  padding-inline: 12px;
+}
+
+.task-item--editing {
+  display: block;
+}
+
+.task-edit-form {
+  display: grid;
+  gap: 12px;
+}
+
+.task-edit-form__title {
+  color: var(--text);
+  font-weight: 750;
+}
+
+.task-edit-form__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 140px 160px;
+  gap: 12px;
+}
+
+.task-edit-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .empty-state {
@@ -399,7 +466,7 @@ button:focus-visible {
     flex-direction: column;
   }
 
-  .task-stats {
+  .task-summary {
     width: 100%;
   }
 
@@ -430,19 +497,23 @@ button:focus-visible {
     font-size: 2rem;
   }
 
-  .task-stats {
-    grid-template-columns: 1fr;
+  .task-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .task-stats div {
+  .task-summary__card {
     display: flex;
     min-height: 56px;
     align-items: center;
     justify-content: space-between;
   }
 
-  .task-stats dd {
+  .task-summary dd {
     margin: 0;
+  }
+
+  .task-summary__card--overdue {
+    grid-column: 1 / -1;
   }
 
   .tool-section {
@@ -452,6 +523,15 @@ button:focus-visible {
   .task-form,
   .task-filters {
     grid-template-columns: 1fr;
+  }
+
+  .task-edit-form__grid,
+  .task-edit-form__actions {
+    grid-template-columns: 1fr;
+  }
+
+  .task-edit-form__actions {
+    display: grid;
   }
 
   .section-heading {
@@ -467,6 +547,18 @@ button:focus-visible {
 
   .danger-button {
     grid-column: 2;
+    width: 100%;
+  }
+
+  .task-actions {
+    grid-column: 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+
+  .task-actions .secondary-button,
+  .task-actions .danger-button {
     width: 100%;
   }
 

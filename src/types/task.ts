@@ -11,18 +11,30 @@ export type Task = {
   priority: Priority
   category: string
   createdAt: string
+  dueDate: string | null
 }
 
 export type TaskDraft = {
   title: string
   priority: Priority
   category: string
+  dueDate: string | null
 }
+
+export type TaskUpdate = TaskDraft
 
 export type TaskFilters = {
   searchQuery: string
   statusFilter: StatusFilter
   priorityFilter: PriorityFilter
+}
+
+export type TaskSummary = {
+  total: number
+  active: number
+  completed: number
+  highPriority: number
+  overdue: number
 }
 
 export const priorityLabels: Record<Priority, string> = {
