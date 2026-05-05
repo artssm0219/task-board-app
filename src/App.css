@@ -139,7 +139,9 @@ h2 {
 }
 
 .task-filters {
-  grid-template-columns: minmax(220px, 1.4fr) minmax(260px, 1.1fr) 140px auto;
+  grid-template-columns:
+    minmax(220px, 1.3fr) minmax(240px, 1fr) 130px
+    minmax(180px, 0.9fr) auto;
   align-items: end;
 }
 
@@ -484,6 +486,10 @@ button:focus-visible {
   .task-form .primary-button {
     grid-column: 1 / -1;
     margin-top: 0;
+  }
+
+  .task-filters .secondary-button {
+    grid-column: 1 / -1;
   }
 }
 

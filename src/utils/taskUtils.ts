@@ -4,10 +4,16 @@ import type {
   TaskFilters,
   TaskSummary,
   TaskUpdate,
+  SortOption,
 } from '../types/task'
 
 const FALLBACK_CATEGORY = '未分類'
 const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+const priorityRanks = {
+  high: 3,
+  medium: 2,
+  low: 1,
+} as const
 
 const createId = () => {
   if (globalThis.crypto?.randomUUID) {
@@ -115,4 +121,58 @@ export const filterTasks = (tasks: Task[], filters: TaskFilters) => {
 
     return matchesSearch && matchesStatus && matchesPriority
   })
+}
+
+const compareCreatedAt = (leftTask: Task, rightTask: Task) =>
+  Date.parse(rightTask.createdAt) - Date.parse(leftTask.createdAt)
+
+const compareDueDate = (direction: 'asc' | 'desc') => {
+  const missingDueDateRank = 1
+
+  return (leftTask: Task, rightTask: Task) => {
+    if (!leftTask.dueDate || !rightTask.dueDate) {
+      const leftRank = leftTask.dueDate ? 0 : missingDueDateRank
+      const rightRank = rightTask.dueDate ? 0 : missingDueDateRank
+
+      return leftRank - rightRank
+    }
+
+    return direction === 'asc'
+      ? leftTask.dueDate.localeCompare(rightTask.dueDate)
+      : rightTask.dueDate.localeCompare(leftTask.dueDate)
+  }
+}
+
+const comparePriority = (direction: 'asc' | 'desc') => {
+  const directionMultiplier = direction === 'asc' ? 1 : -1
+
+  return (leftTask: Task, rightTask: Task) =>
+    (priorityRanks[leftTask.priority] - priorityRanks[rightTask.priority]) *
+    directionMultiplier
+}
+
+export const sortTasks = (tasks: Task[], sortOption: SortOption): Task[] => {
+  const sortedTasks = [...tasks]
+
+  switch (sortOption) {
+    case 'created-desc':
+      return sortedTasks.sort(compareCreatedAt)
+    case 'created-asc':
+      return sortedTasks.sort((leftTask, rightTask) =>
+        compareCreatedAt(rightTask, leftTask),
+      )
+    case 'due-asc':
+      return sortedTasks.sort(compareDueDate('asc'))
+    case 'due-desc':
+      return sortedTasks.sort(compareDueDate('desc'))
+    case 'priority-desc':
+      return sortedTasks.sort(comparePriority('desc'))
+    case 'priority-asc':
+      return sortedTasks.sort(comparePriority('asc'))
+    case 'active-first':
+      return sortedTasks.sort(
+        (leftTask, rightTask) =>
+          Number(leftTask.completed) - Number(rightTask.completed),
+      )
+  }
 }

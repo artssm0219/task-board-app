@@ -1,26 +1,43 @@
-import type { PriorityFilter, StatusFilter } from '../types/task'
-import { priorityFilterLabels, statusFilterLabels } from '../types/task'
+import type { PriorityFilter, SortOption, StatusFilter } from '../types/task'
+import {
+  priorityFilterLabels,
+  sortOptionLabels,
+  statusFilterLabels,
+} from '../types/task'
 
 type TaskFiltersProps = {
   searchQuery: string
   statusFilter: StatusFilter
   priorityFilter: PriorityFilter
+  sortOption: SortOption
   onSearchChange: (searchQuery: string) => void
   onStatusFilterChange: (statusFilter: StatusFilter) => void
   onPriorityFilterChange: (priorityFilter: PriorityFilter) => void
+  onSortOptionChange: (sortOption: SortOption) => void
   onResetFilters: () => void
 }
 
 const statusFilters: StatusFilter[] = ['all', 'active', 'completed']
 const priorityFilters: PriorityFilter[] = ['all', 'high', 'medium', 'low']
+const sortOptions: SortOption[] = [
+  'created-desc',
+  'created-asc',
+  'due-asc',
+  'due-desc',
+  'priority-desc',
+  'priority-asc',
+  'active-first',
+]
 
 export const TaskFilters = ({
   searchQuery,
   statusFilter,
   priorityFilter,
+  sortOption,
   onSearchChange,
   onStatusFilterChange,
   onPriorityFilterChange,
+  onSortOptionChange,
   onResetFilters,
 }: TaskFiltersProps) => (
   <div className="task-filters">
@@ -65,6 +82,23 @@ export const TaskFilters = ({
         {priorityFilters.map((filter) => (
           <option key={filter} value={filter}>
             {priorityFilterLabels[filter]}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    <div className="field">
+      <label htmlFor="task-sort">並び替え</label>
+      <select
+        id="task-sort"
+        value={sortOption}
+        onChange={(event) =>
+          onSortOptionChange(event.target.value as SortOption)
+        }
+      >
+        {sortOptions.map((option) => (
+          <option key={option} value={option}>
+            {sortOptionLabels[option]}
           </option>
         ))}
       </select>
