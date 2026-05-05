@@ -1,16 +1,18 @@
 import { useState } from 'react'
 import { TaskEditForm } from './TaskEditForm'
-import type { Task } from '../types/task'
+import type { Task, TaskStatus } from '../types/task'
 import type { TaskUpdate } from '../types/task'
-import { priorityLabels } from '../types/task'
+import { priorityLabels, taskStatusLabels } from '../types/task'
 import { isOverdueTask } from '../utils/taskUtils'
 
 type TaskItemProps = {
   task: Task
-  onToggleTask: (taskId: string) => void
+  onStatusChange: (taskId: string, status: TaskStatus) => void
   onUpdateTask: (taskId: string, taskUpdate: TaskUpdate) => void
   onDeleteTask: (taskId: string) => void
 }
+
+const taskStatuses: TaskStatus[] = ['todo', 'inProgress', 'done']
 
 const formatDate = (date: string) =>
   new Intl.DateTimeFormat('ja-JP', {
@@ -29,7 +31,7 @@ const formatDateKey = (dateKey: string) => {
 
 export const TaskItem = ({
   task,
-  onToggleTask,
+  onStatusChange,
   onUpdateTask,
   onDeleteTask,
 }: TaskItemProps) => {
@@ -55,24 +57,16 @@ export const TaskItem = ({
 
   return (
     <li className={isOverdue ? 'task-item task-item--overdue' : 'task-item'}>
-      <label className="task-item__check">
-        <input
-          type="checkbox"
-          checked={task.completed}
-          onChange={() => onToggleTask(task.id)}
-        />
-        <span className="visually-hidden">
-          {task.title}を{task.completed ? '未完了' : '完了'}にする
-        </span>
-      </label>
-
       <div className="task-item__content">
         <p
-          className={task.completed ? 'task-title task-title--done' : 'task-title'}
+          className={task.status === 'done' ? 'task-title task-title--done' : 'task-title'}
         >
           {task.title}
         </p>
         <div className="task-meta">
+          <span className={`status-badge status-badge--${task.status}`}>
+            {taskStatusLabels[task.status]}
+          </span>
           <span className="category-label">{task.category}</span>
           <span className={`priority-badge priority-badge--${task.priority}`}>
             優先度: {priorityLabels[task.priority]}
@@ -89,6 +83,23 @@ export const TaskItem = ({
           ) : null}
           <time dateTime={task.createdAt}>{formatDate(task.createdAt)}</time>
         </div>
+      </div>
+
+      <div className="task-status-control">
+        <label htmlFor={`status-${task.id}`}>状態</label>
+        <select
+          id={`status-${task.id}`}
+          value={task.status}
+          onChange={(event) =>
+            onStatusChange(task.id, event.target.value as TaskStatus)
+          }
+        >
+          {taskStatuses.map((taskStatus) => (
+            <option key={taskStatus} value={taskStatus}>
+              {taskStatusLabels[taskStatus]}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="task-actions">

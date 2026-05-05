@@ -1,8 +1,12 @@
 export type Priority = 'high' | 'medium' | 'low'
 
-export type StatusFilter = 'all' | 'active' | 'completed'
+export type TaskStatus = 'todo' | 'inProgress' | 'done'
+
+export type StatusFilter = 'all' | TaskStatus
 
 export type PriorityFilter = 'all' | Priority
+
+export type ViewMode = 'list' | 'board'
 
 export type SortOption =
   | 'created-desc'
@@ -16,7 +20,7 @@ export type SortOption =
 export type Task = {
   id: string
   title: string
-  completed: boolean
+  status: TaskStatus
   priority: Priority
   category: string
   createdAt: string
@@ -25,6 +29,7 @@ export type Task = {
 
 export type TaskDraft = {
   title: string
+  status: TaskStatus
   priority: Priority
   category: string
   dueDate: string | null
@@ -40,8 +45,9 @@ export type TaskFilters = {
 
 export type TaskSummary = {
   total: number
-  active: number
-  completed: number
+  todo: number
+  inProgress: number
+  done: number
   highPriority: number
   overdue: number
 }
@@ -52,10 +58,15 @@ export const priorityLabels: Record<Priority, string> = {
   low: '低',
 }
 
+export const taskStatusLabels: Record<TaskStatus, string> = {
+  todo: '未着手',
+  inProgress: '進行中',
+  done: '完了',
+}
+
 export const statusFilterLabels: Record<StatusFilter, string> = {
   all: 'すべて',
-  active: '未完了',
-  completed: '完了済み',
+  ...taskStatusLabels,
 }
 
 export const priorityFilterLabels: Record<PriorityFilter, string> = {

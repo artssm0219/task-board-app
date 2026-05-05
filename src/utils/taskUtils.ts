@@ -5,6 +5,7 @@ import type {
   TaskSummary,
   TaskUpdate,
   SortOption,
+  TaskStatus,
 } from '../types/task'
 
 const FALLBACK_CATEGORY = '未分類'
@@ -14,6 +15,12 @@ const priorityRanks = {
   medium: 2,
   low: 1,
 } as const
+
+const statusRanks: Record<TaskStatus, number> = {
+  todo: 1,
+  inProgress: 2,
+  done: 3,
+}
 
 const createId = () => {
   if (globalThis.crypto?.randomUUID) {
@@ -26,7 +33,7 @@ const createId = () => {
 export const createTask = (draft: TaskDraft): Task => ({
   id: createId(),
   title: draft.title.trim(),
-  completed: false,
+  status: draft.status,
   priority: draft.priority,
   category: draft.category.trim() || FALLBACK_CATEGORY,
   createdAt: new Date().toISOString(),
@@ -36,6 +43,7 @@ export const createTask = (draft: TaskDraft): Task => ({
 export const applyTaskUpdate = (task: Task, update: TaskUpdate): Task => ({
   ...task,
   title: update.title.trim(),
+  status: update.status,
   priority: update.priority,
   category: update.category.trim() || FALLBACK_CATEGORY,
   dueDate: normalizeDueDate(update.dueDate),
@@ -78,7 +86,7 @@ export const getTodayDateKey = () => {
 export const isOverdueTask = (
   task: Task,
   todayDateKey = getTodayDateKey(),
-) => Boolean(task.dueDate && !task.completed && task.dueDate < todayDateKey)
+) => Boolean(task.dueDate && task.status !== 'done' && task.dueDate < todayDateKey)
 
 export const getTaskSummary = (tasks: Task[]): TaskSummary => {
   const todayDateKey = getTodayDateKey()
@@ -86,15 +94,18 @@ export const getTaskSummary = (tasks: Task[]): TaskSummary => {
   return tasks.reduce<TaskSummary>(
     (summary, task) => ({
       total: summary.total + 1,
-      active: summary.active + (task.completed ? 0 : 1),
-      completed: summary.completed + (task.completed ? 1 : 0),
+      todo: summary.todo + (task.status === 'todo' ? 1 : 0),
+      inProgress:
+        summary.inProgress + (task.status === 'inProgress' ? 1 : 0),
+      done: summary.done + (task.status === 'done' ? 1 : 0),
       highPriority: summary.highPriority + (task.priority === 'high' ? 1 : 0),
       overdue: summary.overdue + (isOverdueTask(task, todayDateKey) ? 1 : 0),
     }),
     {
       total: 0,
-      active: 0,
-      completed: 0,
+      todo: 0,
+      inProgress: 0,
+      done: 0,
       highPriority: 0,
       overdue: 0,
     },
@@ -112,8 +123,7 @@ export const filterTasks = (tasks: Task[], filters: TaskFilters) => {
 
     const matchesStatus =
       filters.statusFilter === 'all' ||
-      (filters.statusFilter === 'active' && !task.completed) ||
-      (filters.statusFilter === 'completed' && task.completed)
+      task.status === filters.statusFilter
 
     const matchesPriority =
       filters.priorityFilter === 'all' ||
@@ -172,7 +182,9 @@ export const sortTasks = (tasks: Task[], sortOption: SortOption): Task[] => {
     case 'active-first':
       return sortedTasks.sort(
         (leftTask, rightTask) =>
-          Number(leftTask.completed) - Number(rightTask.completed),
+          Number(leftTask.status === 'done') -
+            Number(rightTask.status === 'done') ||
+          statusRanks[leftTask.status] - statusRanks[rightTask.status],
       )
   }
 }

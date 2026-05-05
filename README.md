@@ -28,7 +28,10 @@ React + TypeScript + Viteで作る、ブラウザ上で使えるタスク管理W
 - タスクを追加できる
 - タスクを編集できる
 - タスクを削除できる
-- タスクの完了 / 未完了を切り替えできる
+- タスクの状態を管理できる
+  - `todo`: 未着手
+  - `inProgress`: 進行中
+  - `done`: 完了
 - タスクに優先度を設定できる
   - `high`
   - `medium`
@@ -36,15 +39,18 @@ React + TypeScript + Viteで作る、ブラウザ上で使えるタスク管理W
 - タスクにカテゴリを設定できる
 - タスクに期限日を設定できる
 - 未完了かつ期限日を過ぎたタスクを期限切れとして表示できる
-- 全体・未完了・完了済み・高優先度・期限切れのサマリーを表示できる
+- 全体・未着手・進行中・完了・高優先度・期限切れのサマリーを表示できる
+- リスト表示とボード表示を切り替えできる
+- ボード表示では、未着手 / 進行中 / 完了の3列でタスクを確認できる
 
 ### 検索・フィルタ・並び替え
 
 - キーワードでタスクを検索できる
-- 完了状態でフィルタできる
+- 状態でフィルタできる
   - `all`
-  - `active`
-  - `completed`
+  - `todo`
+  - `inProgress`
+  - `done`
 - 優先度でフィルタできる
   - `all`
   - `high`
@@ -64,6 +70,9 @@ React + TypeScript + Viteで作る、ブラウザ上で使えるタスク管理W
 
 - タスク一覧を`localStorage`に保存する
 - ページを再読み込みしてもタスクが残る
+- 古い保存データの`completed`を`status`へ移行して読み込む
+  - `completed: false`は`status: 'todo'`
+  - `completed: true`は`status: 'done'`
 - 既存の保存データに`dueDate`がない場合は`null`を補完して読み込む
 - 不正な`dueDate`は`null`に丸める
 - 保存データの読み込みに失敗した場合でも、アプリが壊れないように空配列へフォールバックする
@@ -80,11 +89,13 @@ React + TypeScript + Viteで作る、ブラウザ上で使えるタスク管理W
 
 ```ts
 type Priority = 'high' | 'medium' | 'low'
+type TaskStatus = 'todo' | 'inProgress' | 'done'
+type ViewMode = 'list' | 'board'
 
 type Task = {
   id: string
   title: string
-  completed: boolean
+  status: TaskStatus
   priority: Priority
   category: string
   createdAt: string
@@ -93,6 +104,7 @@ type Task = {
 
 type TaskDraft = {
   title: string
+  status: TaskStatus
   priority: Priority
   category: string
   dueDate: string | null
@@ -102,8 +114,9 @@ type TaskUpdate = TaskDraft
 
 type TaskSummary = {
   total: number
-  active: number
-  completed: number
+  todo: number
+  inProgress: number
+  done: number
   highPriority: number
   overdue: number
 }
@@ -112,7 +125,7 @@ type TaskSummary = {
 ### Filter
 
 ```ts
-type StatusFilter = 'all' | 'active' | 'completed'
+type StatusFilter = 'all' | 'todo' | 'inProgress' | 'done'
 type PriorityFilter = 'all' | 'high' | 'medium' | 'low'
 type SortOption =
   | 'created-desc'
@@ -129,6 +142,8 @@ type SortOption =
 - 保存キー: `task-board-app:tasks`
 - 保存形式: `Task[]`をJSON文字列化して保存する
 - 読み込み時は`try...catch`でパース失敗に備える
+- 古い保存データの`completed`は読み込み時に`status`へ変換する
+- アプリ内部では`completed`ではなく`status`を正として扱う
 - 古い保存データに`dueDate`がない場合は`null`を補完する
 - 不正な`dueDate`は`null`として扱う
 - 基本項目が壊れている場合は警告を表示し、初期状態で表示する
@@ -146,6 +161,8 @@ type SortOption =
 - `searchQuery`
 - `statusFilter`
 - `priorityFilter`
+- `sortOption`
+- `viewMode`
 
 ### コンポーネント分割
 
@@ -153,10 +170,12 @@ UIの責務ごとにコンポーネントを分けます。
 
 - `TaskForm`: タスク追加フォーム
 - `TaskEditForm`: タスク編集フォーム
-- `TaskFilters`: 検索・完了状態フィルタ・優先度フィルタ
+- `TaskFilters`: 検索・状態フィルタ・優先度フィルタ・並び替え
 - `TaskList`: 表示対象タスク一覧
-- `TaskItem`: 1件のタスク表示、完了切り替え、削除
+- `TaskBoard`: ステータス別のボード表示
+- `TaskItem`: 1件のタスク表示、状態変更、編集、削除
 - `TaskSummary`: タスク数のサマリー表示
+- `ViewModeToggle`: リスト表示 / ボード表示の切り替え
 - `EmptyState`: タスクがない場合の表示
 
 ### カスタムフック
@@ -169,7 +188,7 @@ UIの責務ごとにコンポーネントを分けます。
 
 タスクの絞り込みやID生成など、画面表示と直接関係しない処理は分離します。
 
-- `filterTasks`: 検索・完了状態・優先度でタスクを絞り込む
+- `filterTasks`: 検索・状態・優先度でタスクを絞り込む
 - `sortTasks`: 検索・フィルタ後の表示用タスクを並び替える
 - `createTask`: 入力値から`Task`を作成する
 - `applyTaskUpdate`: 編集内容を既存タスクに反映する
@@ -183,12 +202,14 @@ task-board-app/
   src/
     components/
       EmptyState.tsx
+      TaskBoard.tsx
       TaskEditForm.tsx
       TaskFilters.tsx
       TaskForm.tsx
       TaskItem.tsx
       TaskList.tsx
       TaskSummary.tsx
+      ViewModeToggle.tsx
     hooks/
       useLocalStorageTasks.ts
     types/
@@ -234,23 +255,26 @@ npm run preview
 ## 使い方
 
 1. 「タスクを追加」フォームにタスク名を入力する
-2. 必要に応じてカテゴリ、優先度、期限日を設定する
+2. 必要に応じて状態、カテゴリ、優先度、期限日を設定する
 3. 「追加」ボタンでタスクを登録する
-4. チェックボックスで完了 / 未完了を切り替える
-5. 「編集」ボタンでタスク名、カテゴリ、優先度、期限日を更新する
+4. 状態selectで未着手 / 進行中 / 完了を切り替える
+5. 「編集」ボタンでタスク名、状態、カテゴリ、優先度、期限日を更新する
 6. 「削除」ボタンで不要なタスクを削除する
-7. 検索欄、完了状態、優先度フィルタで表示するタスクを絞り込む
+7. 検索欄、状態、優先度フィルタで表示するタスクを絞り込む
 8. 並び替えselectで作成日、期限、優先度、未完了優先の順に並べ替える
-9. 追加・更新・削除した内容は`localStorage`に保存され、ページ再読み込み後も残る
+9. リスト / ボードの表示形式を切り替える
+10. 追加・更新・削除した内容は`localStorage`に保存され、ページ再読み込み後も残る
 
 ## ポートフォリオとしての見どころ
 
 - Reactコンポーネントを責務ごとに分割している
 - TypeScriptでタスク、入力値、更新値、サマリーの型を定義している
 - `localStorage`の読み込み失敗や古い保存データとの互換性を考慮している
+- `completed`から`status`へのデータ移行を読み込み時に行っている
 - 期限切れ判定をユーティリティに分離し、UIからロジックを切り離している
 - 検索・フィルタ後に元データを変更せず表示用配列だけを並び替える
-- 追加、編集、削除、完了切り替え、検索、フィルタ、並び替えが1画面で完結する
+- リスト表示とステータス別ボード表示を切り替えられる
+- 追加、編集、削除、状態変更、検索、フィルタ、並び替えが1画面で完結する
 - スマホ幅でも操作しやすいレスポンシブレイアウトにしている
 
 ## 公開方法
@@ -292,7 +316,7 @@ export default defineConfig({
 1. 上部にアプリ名とサマリーカードを置く
 2. タスク追加フォームを置く
 3. 検索欄、フィルタ、並び替えselectを置く
-4. タスク一覧、期限日、期限切れバッジを表示する
+4. リスト表示またはボード表示でタスク、状態、期限日、期限切れバッジを表示する
 5. タスクがない場合は空状態メッセージを表示する
 
 ## UI・アクセシビリティ方針
@@ -300,7 +324,7 @@ export default defineConfig({
 - 入力欄には`label`を紐づける
 - ボタンの目的が分かる文言にする
 - キーボード操作でも利用できるようにする
-- 完了済みタスクは見た目で区別する
+- 完了タスクは見た目で区別する
 - 優先度は色だけに頼らず、テキストでも表示する
 - コントラストを確保する
 
@@ -309,11 +333,12 @@ export default defineConfig({
 - タスク追加後に入力欄がリセットされること
 - 空文字や空白だけのタスクが追加されないこと
 - 空タイトルでは編集保存できないこと
-- 完了切り替えが`localStorage`に保存されること
+- 状態変更が`localStorage`に保存されること
 - 編集内容が`localStorage`に保存されること
 - 削除後の状態が`localStorage`に保存されること
+- 古い`completed`付き保存データでも`status`へ移行して復元されること
 - 古い保存データでも`dueDate: null`として復元されること
-- 期限切れ表示が未完了タスクだけに出ること
+- 期限切れ表示が完了以外のタスクだけに出ること
 - 検索とフィルタを同時に使えること
 - ページ再読み込み後もタスクが復元されること
 - スマホ幅で表示崩れがないこと
@@ -322,10 +347,11 @@ export default defineConfig({
 
 1. 型定義を作成する
 2. `localStorage`用のカスタムフックを作成する
-3. タスク追加・削除・完了切り替えを実装する
+3. タスク追加・削除・状態変更を実装する
 4. タスク編集・期限日・期限切れ表示を実装する
 5. 検索・フィルタを実装する
-6. サマリー表示を実装する
-7. スマホ対応を含むスタイルを整える
-8. 動作確認を行う
-9. READMEに起動方法・ビルド方法・公開方法を追記する
+6. リスト表示 / ボード表示を実装する
+7. サマリー表示を実装する
+8. スマホ対応を含むスタイルを整える
+9. 動作確認を行う
+10. READMEに起動方法・ビルド方法・公開方法を追記する

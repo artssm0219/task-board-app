@@ -1,16 +1,20 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import type { Priority, TaskDraft } from '../types/task'
+import type { Priority, TaskDraft, TaskStatus } from '../types/task'
+import { taskStatusLabels } from '../types/task'
 
 type TaskFormProps = {
   onAddTask: (task: TaskDraft) => void
 }
 
 const defaultPriority: Priority = 'medium'
+const defaultStatus: TaskStatus = 'todo'
+const taskStatuses: TaskStatus[] = ['todo', 'inProgress', 'done']
 
 export const TaskForm = ({ onAddTask }: TaskFormProps) => {
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState('')
+  const [status, setStatus] = useState<TaskStatus>(defaultStatus)
   const [priority, setPriority] = useState<Priority>(defaultPriority)
   const [dueDate, setDueDate] = useState('')
   const isTitleBlank = title.trim().length === 0
@@ -22,9 +26,10 @@ export const TaskForm = ({ onAddTask }: TaskFormProps) => {
       return
     }
 
-    onAddTask({ title, category, priority, dueDate: dueDate || null })
+    onAddTask({ title, category, status, priority, dueDate: dueDate || null })
     setTitle('')
     setCategory('')
+    setStatus(defaultStatus)
     setPriority(defaultPriority)
     setDueDate('')
   }
@@ -58,6 +63,21 @@ export const TaskForm = ({ onAddTask }: TaskFormProps) => {
           placeholder="例: 仕事"
           autoComplete="off"
         />
+      </div>
+
+      <div className="field">
+        <label htmlFor="task-status">状態</label>
+        <select
+          id="task-status"
+          value={status}
+          onChange={(event) => setStatus(event.target.value as TaskStatus)}
+        >
+          {taskStatuses.map((taskStatus) => (
+            <option key={taskStatus} value={taskStatus}>
+              {taskStatusLabels[taskStatus]}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="field">

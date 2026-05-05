@@ -1,16 +1,20 @@
 import { useMemo, useState } from 'react'
 import './App.css'
+import { TaskBoard } from './components/TaskBoard'
 import { TaskFilters } from './components/TaskFilters'
 import { TaskForm } from './components/TaskForm'
 import { TaskList } from './components/TaskList'
 import { TaskSummary } from './components/TaskSummary'
+import { ViewModeToggle } from './components/ViewModeToggle'
 import { useLocalStorageTasks } from './hooks/useLocalStorageTasks'
 import type {
   PriorityFilter,
   SortOption,
   StatusFilter,
+  TaskStatus,
   TaskDraft,
   TaskUpdate,
+  ViewMode,
 } from './types/task'
 import {
   applyTaskUpdate,
@@ -23,6 +27,7 @@ import {
 const initialStatusFilter: StatusFilter = 'all'
 const initialPriorityFilter: PriorityFilter = 'all'
 const initialSortOption: SortOption = 'created-desc'
+const initialViewMode: ViewMode = 'list'
 
 function App() {
   const { tasks, setTasks, storageWarning, dismissStorageWarning } =
@@ -34,6 +39,7 @@ function App() {
     initialPriorityFilter,
   )
   const [sortOption, setSortOption] = useState<SortOption>(initialSortOption)
+  const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode)
 
   const visibleTasks = useMemo(() => {
     const filteredTasks = filterTasks(tasks, {
@@ -55,10 +61,10 @@ function App() {
     setTasks((currentTasks) => [createTask(taskDraft), ...currentTasks])
   }
 
-  const handleToggleTask = (taskId: string) => {
+  const handleStatusChange = (taskId: string, status: TaskStatus) => {
     setTasks((currentTasks) =>
       currentTasks.map((task) =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task,
+        task.id === taskId ? { ...task, status } : task,
       ),
     )
   }
@@ -130,19 +136,37 @@ function App() {
 
       <section className="task-section" aria-labelledby="task-list-heading">
         <div className="section-heading">
-          <h2 id="task-list-heading">タスク一覧</h2>
-          <p aria-live="polite">
-            {visibleTasks.length} / {tasks.length} 件を表示
-          </p>
+          <div>
+            <h2 id="task-list-heading">
+              {viewMode === 'list' ? 'タスク一覧' : 'タスクボード'}
+            </h2>
+            <p aria-live="polite">
+              {visibleTasks.length} / {tasks.length} 件を表示
+            </p>
+          </div>
+          <ViewModeToggle
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+          />
         </div>
 
-        <TaskList
-          tasks={visibleTasks}
-          hasFilters={hasFilters}
-          onToggleTask={handleToggleTask}
-          onUpdateTask={handleUpdateTask}
-          onDeleteTask={handleDeleteTask}
-        />
+        {viewMode === 'list' ? (
+          <TaskList
+            tasks={visibleTasks}
+            hasFilters={hasFilters}
+            onStatusChange={handleStatusChange}
+            onUpdateTask={handleUpdateTask}
+            onDeleteTask={handleDeleteTask}
+          />
+        ) : (
+          <TaskBoard
+            tasks={visibleTasks}
+            hasFilters={hasFilters}
+            onStatusChange={handleStatusChange}
+            onUpdateTask={handleUpdateTask}
+            onDeleteTask={handleDeleteTask}
+          />
+        )}
       </section>
     </main>
   )

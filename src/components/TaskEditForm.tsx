@@ -1,12 +1,15 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import type { Priority, Task, TaskUpdate } from '../types/task'
+import type { Priority, Task, TaskStatus, TaskUpdate } from '../types/task'
+import { taskStatusLabels } from '../types/task'
 
 type TaskEditFormProps = {
   task: Task
   onSave: (taskId: string, taskUpdate: TaskUpdate) => void
   onCancel: () => void
 }
+
+const taskStatuses: TaskStatus[] = ['todo', 'inProgress', 'done']
 
 export const TaskEditForm = ({
   task,
@@ -15,6 +18,7 @@ export const TaskEditForm = ({
 }: TaskEditFormProps) => {
   const [title, setTitle] = useState(task.title)
   const [category, setCategory] = useState(task.category)
+  const [status, setStatus] = useState<TaskStatus>(task.status)
   const [priority, setPriority] = useState<Priority>(task.priority)
   const [dueDate, setDueDate] = useState(task.dueDate ?? '')
   const isTitleBlank = title.trim().length === 0
@@ -29,6 +33,7 @@ export const TaskEditForm = ({
     onSave(task.id, {
       title,
       category,
+      status,
       priority,
       dueDate: dueDate || null,
     })
@@ -58,6 +63,21 @@ export const TaskEditForm = ({
             value={category}
             onChange={(event) => setCategory(event.target.value)}
           />
+        </div>
+
+        <div className="field">
+          <label htmlFor={`edit-status-${task.id}`}>状態</label>
+          <select
+            id={`edit-status-${task.id}`}
+            value={status}
+            onChange={(event) => setStatus(event.target.value as TaskStatus)}
+          >
+            {taskStatuses.map((taskStatus) => (
+              <option key={taskStatus} value={taskStatus}>
+                {taskStatusLabels[taskStatus]}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="field">

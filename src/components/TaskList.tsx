@@ -1,12 +1,12 @@
 import { EmptyState } from './EmptyState'
 import { TaskItem } from './TaskItem'
 import type { Task } from '../types/task'
-import type { TaskUpdate } from '../types/task'
+import type { TaskStatus, TaskUpdate } from '../types/task'
 
 type TaskListProps = {
   tasks: Task[]
   hasFilters: boolean
-  onToggleTask: (taskId: string) => void
+  onStatusChange: (taskId: string, status: TaskStatus) => void
   onUpdateTask: (taskId: string, taskUpdate: TaskUpdate) => void
   onDeleteTask: (taskId: string) => void
 }
@@ -14,7 +14,7 @@ type TaskListProps = {
 export const TaskList = ({
   tasks,
   hasFilters,
-  onToggleTask,
+  onStatusChange,
   onUpdateTask,
   onDeleteTask,
 }: TaskListProps) => {
@@ -37,7 +37,7 @@ export const TaskList = ({
         <TaskItem
           key={task.id}
           task={task}
-          onToggleTask={onToggleTask}
+          onStatusChange={onStatusChange}
           onUpdateTask={onUpdateTask}
           onDeleteTask={onDeleteTask}
         />

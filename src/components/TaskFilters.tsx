@@ -17,7 +17,7 @@ type TaskFiltersProps = {
   onResetFilters: () => void
 }
 
-const statusFilters: StatusFilter[] = ['all', 'active', 'completed']
+const statusFilters: StatusFilter[] = ['all', 'todo', 'inProgress', 'done']
 const priorityFilters: PriorityFilter[] = ['all', 'high', 'medium', 'low']
 const sortOptions: SortOption[] = [
   'created-desc',
@@ -53,7 +53,7 @@ export const TaskFilters = ({
     </div>
 
     <fieldset className="segmented-control">
-      <legend>完了状態</legend>
+      <legend>状態</legend>
       <div className="segmented-control__options">
         {statusFilters.map((filter) => (
           <label key={filter} className="segmented-control__option">
