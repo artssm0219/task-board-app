@@ -5,8 +5,10 @@ import { TaskFilters } from './components/TaskFilters'
 import { TaskForm } from './components/TaskForm'
 import { TaskList } from './components/TaskList'
 import { TaskSummary } from './components/TaskSummary'
+import { ThemeToggle } from './components/ThemeToggle'
 import { ViewModeToggle } from './components/ViewModeToggle'
 import { useLocalStorageTasks } from './hooks/useLocalStorageTasks'
+import { useTheme } from './hooks/useTheme'
 import type {
   PriorityFilter,
   SortOption,
@@ -32,6 +34,7 @@ const initialViewMode: ViewMode = 'list'
 function App() {
   const { tasks, setTasks, storageWarning, dismissStorageWarning } =
     useLocalStorageTasks()
+  const { theme, toggleTheme } = useTheme()
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] =
     useState<StatusFilter>(initialStatusFilter)
@@ -93,9 +96,12 @@ function App() {
   return (
     <main className="app-shell">
       <header className="app-header">
-        <div>
-          <p className="eyebrow">Local task board</p>
-          <h1>タスク管理</h1>
+        <div className="app-header__main">
+          <div>
+            <p className="eyebrow">Local task board</p>
+            <h1>タスク管理</h1>
+          </div>
+          <ThemeToggle theme={theme} onToggleTheme={toggleTheme} />
         </div>
 
         <TaskSummary summary={taskSummary} />
