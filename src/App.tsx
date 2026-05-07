@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import './App.css'
 import { TaskBoard } from './components/TaskBoard'
+import { TaskCharts } from './components/TaskCharts'
 import { TaskFilters } from './components/TaskFilters'
 import { TaskForm } from './components/TaskForm'
 import { TaskImportExport } from './components/TaskImportExport'
@@ -127,6 +128,19 @@ function App() {
 
         <TaskSummary summary={taskSummary} />
       </header>
+
+      <TaskCharts
+        tasks={tasks}
+        summary={taskSummary}
+        statusFilter={statusFilter}
+        priorityFilter={priorityFilter}
+        onStatusSelect={(next) =>
+          setStatusFilter(next === statusFilter ? 'all' : next)
+        }
+        onPrioritySelect={(next) =>
+          setPriorityFilter(next === priorityFilter ? 'all' : next)
+        }
+      />
 
       {storageWarning ? (
         <div className="storage-alert" role="alert">

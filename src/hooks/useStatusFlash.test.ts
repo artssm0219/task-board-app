@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
+import type { TaskStatus } from '../types/task'
 import { useStatusFlash } from './useStatusFlash'
 
 describe('useStatusFlash', () => {
@@ -11,7 +12,7 @@ describe('useStatusFlash', () => {
   it('todo → done に変化すると flashKey がインクリメントされる', () => {
     const { result, rerender } = renderHook(
       ({ status }) => useStatusFlash(status),
-      { initialProps: { status: 'todo' as const } },
+      { initialProps: { status: 'todo' as TaskStatus } },
     )
     act(() => { rerender({ status: 'done' }) })
     expect(result.current).toBe(1)
@@ -20,7 +21,7 @@ describe('useStatusFlash', () => {
   it('inProgress → done に変化しても flashKey がインクリメントされる', () => {
     const { result, rerender } = renderHook(
       ({ status }) => useStatusFlash(status),
-      { initialProps: { status: 'inProgress' as const } },
+      { initialProps: { status: 'inProgress' as TaskStatus } },
     )
     act(() => { rerender({ status: 'done' }) })
     expect(result.current).toBe(1)
@@ -29,7 +30,7 @@ describe('useStatusFlash', () => {
   it('done → done (変化なし) では flashKey は変化しない', () => {
     const { result, rerender } = renderHook(
       ({ status }) => useStatusFlash(status),
-      { initialProps: { status: 'done' as const } },
+      { initialProps: { status: 'done' as TaskStatus } },
     )
     act(() => { rerender({ status: 'done' }) })
     expect(result.current).toBe(0)
@@ -38,7 +39,7 @@ describe('useStatusFlash', () => {
   it('done → todo では flashKey は変化しない', () => {
     const { result, rerender } = renderHook(
       ({ status }) => useStatusFlash(status),
-      { initialProps: { status: 'done' as const } },
+      { initialProps: { status: 'done' as TaskStatus } },
     )
     act(() => { rerender({ status: 'todo' }) })
     expect(result.current).toBe(0)
@@ -47,7 +48,7 @@ describe('useStatusFlash', () => {
   it('todo → done → todo → done で 2 回インクリメントされる', () => {
     const { result, rerender } = renderHook(
       ({ status }) => useStatusFlash(status),
-      { initialProps: { status: 'todo' as const } },
+      { initialProps: { status: 'todo' as TaskStatus } },
     )
     act(() => { rerender({ status: 'done' }) })
     act(() => { rerender({ status: 'todo' }) })
