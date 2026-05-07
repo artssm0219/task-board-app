@@ -146,6 +146,66 @@ export const TaskBoard = ({
     )
   }
 
+  // eslint-disable-next-line react-hooks/refs
+  const columns = taskStatuses.map((status) => {
+    const columnTasks = tasks.filter((task) => task.status === status)
+    const columnTaskItems = columnTasks.map((task) => {
+      const nodeRef = getNodeRef(task.id)
+      return (
+        <CSSTransition
+          key={task.id}
+          nodeRef={nodeRef}
+          timeout={TRANSITION_TIMEOUT}
+          classNames="task-item-anim"
+          enter={!isDragActive}
+          exit={!isDragActive}
+        >
+          <DraggableTaskItem
+            ref={nodeRef}
+            task={task}
+            isDescriptionExpanded={expandedDescriptionTaskIds.has(task.id)}
+            onToggleDescription={handleToggleDescription}
+            onStatusChange={onStatusChange}
+            onUpdateTask={onUpdateTask}
+            onDeleteTask={onDeleteTask}
+          />
+        </CSSTransition>
+      )
+    })
+
+    return (
+      <DroppableColumn
+        key={status}
+        status={status}
+        taskCount={columnTasks.length}
+        isDragActive={isDragActive}
+      >
+        {columnTasks.length > 0 ? (
+          <TransitionGroup
+            component="ul"
+            className="task-board__list"
+          >
+            {columnTaskItems}
+          </TransitionGroup>
+        ) : (
+          <div
+            className={
+              isDragActive
+                ? 'task-board__empty task-board__empty--droppable'
+                : 'task-board__empty'
+            }
+          >
+            <p>
+              {isDragActive
+                ? 'ここにドロップ'
+                : `${status === 'todo' ? '未着手' : status === 'inProgress' ? '進行中' : '完了'}のタスクはありません`}
+            </p>
+          </div>
+        )}
+      </DroppableColumn>
+    )
+  })
+
   return (
     <DndContext
       sensors={sensors}
@@ -162,65 +222,7 @@ export const TaskBoard = ({
       }}
     >
       <div className="task-board" aria-label="ステータス別ボード">
-        {taskStatuses.map((status) => {
-          const columnTasks = tasks.filter((task) => task.status === status)
-
-          return (
-            <DroppableColumn
-              key={status}
-              status={status}
-              taskCount={columnTasks.length}
-              isDragActive={isDragActive}
-            >
-              {columnTasks.length > 0 ? (
-                <TransitionGroup
-                  component="ul"
-                  className="task-board__list"
-                >
-                  {columnTasks.map((task) => {
-                    const nodeRef = getNodeRef(task.id)
-                    return (
-                      <CSSTransition
-                        key={task.id}
-                        nodeRef={nodeRef}
-                        timeout={TRANSITION_TIMEOUT}
-                        classNames="task-item-anim"
-                        enter={!isDragActive}
-                        exit={!isDragActive}
-                      >
-                        <DraggableTaskItem
-                          ref={nodeRef}
-                          task={task}
-                          isDescriptionExpanded={expandedDescriptionTaskIds.has(
-                            task.id,
-                          )}
-                          onToggleDescription={handleToggleDescription}
-                          onStatusChange={onStatusChange}
-                          onUpdateTask={onUpdateTask}
-                          onDeleteTask={onDeleteTask}
-                        />
-                      </CSSTransition>
-                    )
-                  })}
-                </TransitionGroup>
-              ) : (
-                <div
-                  className={
-                    isDragActive
-                      ? 'task-board__empty task-board__empty--droppable'
-                      : 'task-board__empty'
-                  }
-                >
-                  <p>
-                    {isDragActive
-                      ? 'ここにドロップ'
-                      : `${status === 'todo' ? '未着手' : status === 'inProgress' ? '進行中' : '完了'}のタスクはありません`}
-                  </p>
-                </div>
-              )}
-            </DroppableColumn>
-          )
-        })}
+        {columns}
       </div>
 
       <DragOverlay>

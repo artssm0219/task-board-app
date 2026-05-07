@@ -1,5 +1,7 @@
 # Task Board App
 
+[![CI](https://github.com/artssm0219/task-board-app/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/artssm0219/task-board-app/actions/workflows/ci.yml)
+
 React + TypeScript + Viteで作る、ブラウザ上で使えるタスク管理Webアプリです。
 
 外部APIやバックエンドを使わず、タスクデータはブラウザの`localStorage`に保存します。

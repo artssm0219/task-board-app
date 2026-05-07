@@ -55,6 +55,27 @@ export const TaskList = ({
     )
   }
 
+  // eslint-disable-next-line react-hooks/refs
+  const taskItems = tasks.map((task) => {
+    const nodeRef = getNodeRef(task.id)
+    return (
+      <CSSTransition
+        key={task.id}
+        nodeRef={nodeRef}
+        timeout={TRANSITION_TIMEOUT}
+        classNames="task-item-anim"
+      >
+        <TaskItem
+          ref={nodeRef}
+          task={task}
+          onStatusChange={onStatusChange}
+          onUpdateTask={onUpdateTask}
+          onDeleteTask={onDeleteTask}
+        />
+      </CSSTransition>
+    )
+  })
+
   return (
     <TransitionGroup
       key={filterEpoch}
@@ -63,25 +84,7 @@ export const TaskList = ({
       aria-label="タスク一覧"
       appear
     >
-      {tasks.map((task) => {
-        const nodeRef = getNodeRef(task.id)
-        return (
-          <CSSTransition
-            key={task.id}
-            nodeRef={nodeRef}
-            timeout={TRANSITION_TIMEOUT}
-            classNames="task-item-anim"
-          >
-            <TaskItem
-              ref={nodeRef}
-              task={task}
-              onStatusChange={onStatusChange}
-              onUpdateTask={onUpdateTask}
-              onDeleteTask={onDeleteTask}
-            />
-          </CSSTransition>
-        )
-      })}
+      {taskItems}
     </TransitionGroup>
   )
 }
