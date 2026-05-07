@@ -7,10 +7,12 @@ import { PriorityBarChart } from './PriorityBarChart'
 const makeTask = (priority: Task['priority']): Task => ({
   id: Math.random().toString(),
   title: 'test',
+  description: '',
   status: 'todo',
   priority,
+  category: '',
   createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
+  dueDate: null,
 })
 
 const tasks: Task[] = [

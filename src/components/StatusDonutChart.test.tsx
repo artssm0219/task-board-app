@@ -10,7 +10,7 @@ const makeSummary = (overrides: Partial<TaskSummary> = {}): TaskSummary => ({
   inProgress: 1,
   done: 3,
   highPriority: 0,
-  dueSoon: 0,
+  dueToday: 0,
   overdue: 0,
   ...overrides,
 })

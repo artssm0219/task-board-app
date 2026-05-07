@@ -9,13 +9,13 @@ const summary: TaskSummary = {
   inProgress: 0,
   done: 1,
   highPriority: 0,
-  dueSoon: 0,
+  dueToday: 0,
   overdue: 0,
 }
 
 const tasks: Task[] = [
-  { id: '1', title: 'A', status: 'todo', priority: 'medium', createdAt: '', updatedAt: '' },
-  { id: '2', title: 'B', status: 'done', priority: 'high', createdAt: '', updatedAt: '' },
+  { id: '1', title: 'A', description: '', status: 'todo', priority: 'medium', category: '', createdAt: '', dueDate: null },
+  { id: '2', title: 'B', description: '', status: 'done', priority: 'high', category: '', createdAt: '', dueDate: null },
 ]
 
 describe('TaskCharts', () => {
