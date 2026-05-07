@@ -1,10 +1,12 @@
-import { useId, useState } from 'react'
+import React, { forwardRef, useId, useState } from 'react'
+import type { DraggableAttributes } from '@dnd-kit/core'
 import { TaskEditModal } from './TaskEditModal'
 import { TaskEditForm } from './TaskEditForm'
 import type { DueDateStatus, Task, TaskStatus } from '../types/task'
 import type { TaskUpdate } from '../types/task'
 import { priorityLabels, taskStatusLabels } from '../types/task'
 import { getDaysUntilDueDate, getDueDateStatus } from '../utils/taskUtils'
+import { useStatusFlash } from '../hooks/useStatusFlash'
 
 type TaskItemProps = {
   task: Task
@@ -14,6 +16,9 @@ type TaskItemProps = {
   onStatusChange: (taskId: string, status: TaskStatus) => void
   onUpdateTask: (taskId: string, taskUpdate: TaskUpdate) => void
   onDeleteTask: (taskId: string) => void
+  draggableAttributes?: DraggableAttributes
+  draggableListeners?: Record<string, React.EventHandler<React.SyntheticEvent>>
+  isDragging?: boolean
 }
 
 type StatusAction = {
@@ -109,172 +114,196 @@ const getDueDateAriaLabel = (
   }
 }
 
-export const TaskItem = ({
-  task,
-  displayMode = 'list',
-  isDescriptionExpanded,
-  onToggleDescription,
-  onStatusChange,
-  onUpdateTask,
-  onDeleteTask,
-}: TaskItemProps) => {
-  const [isEditing, setIsEditing] = useState(false)
-  const [isLocalDescriptionExpanded, setIsLocalDescriptionExpanded] =
-    useState(false)
-  const descriptionId = useId()
-  const dueDateStatus = getDueDateStatus(task)
-  const daysUntilDueDate = task.dueDate
-    ? getDaysUntilDueDate(task.dueDate)
-    : null
-  const isOverdue = dueDateStatus === 'overdue'
-  const descriptionLineCount = task.description.split(/\r\n|\r|\n/).length
-  const hasDescription = task.description.length > 0
-  const isDescriptionExpandable =
-    task.description.length > DESCRIPTION_PREVIEW_LENGTH ||
-    descriptionLineCount > DESCRIPTION_PREVIEW_LINES
-  const descriptionExpanded =
-    isDescriptionExpanded ?? isLocalDescriptionExpanded
-  const shouldShowDescriptionToggle = isDescriptionExpandable
-  const shouldCollapseDescription =
-    shouldShowDescriptionToggle && !descriptionExpanded
+export const TaskItem = forwardRef<HTMLLIElement, TaskItemProps>(
+  function TaskItem(
+    {
+      task,
+      displayMode = 'list',
+      isDescriptionExpanded,
+      onToggleDescription,
+      onStatusChange,
+      onUpdateTask,
+      onDeleteTask,
+      draggableAttributes,
+      draggableListeners,
+      isDragging,
+    },
+    ref,
+  ) {
+    const [isEditing, setIsEditing] = useState(false)
+    const [isLocalDescriptionExpanded, setIsLocalDescriptionExpanded] =
+      useState(false)
+    const descriptionId = useId()
+    const dueDateStatus = getDueDateStatus(task)
+    const daysUntilDueDate = task.dueDate
+      ? getDaysUntilDueDate(task.dueDate)
+      : null
+    const isOverdue = dueDateStatus === 'overdue'
+    const descriptionLineCount = task.description.split(/\r\n|\r|\n/).length
+    const hasDescription = task.description.length > 0
+    const isDescriptionExpandable =
+      task.description.length > DESCRIPTION_PREVIEW_LENGTH ||
+      descriptionLineCount > DESCRIPTION_PREVIEW_LINES
+    const descriptionExpanded =
+      isDescriptionExpanded ?? isLocalDescriptionExpanded
+    const shouldShowDescriptionToggle = isDescriptionExpandable
+    const shouldCollapseDescription =
+      shouldShowDescriptionToggle && !descriptionExpanded
 
-  const handleSave = (taskId: string, taskUpdate: TaskUpdate) => {
-    onUpdateTask(taskId, taskUpdate)
-    setIsEditing(false)
-  }
+    const flashKey = useStatusFlash(task.status)
 
-  const handleToggleDescription = () => {
-    if (onToggleDescription) {
-      onToggleDescription(task.id)
-      return
+    const handleSave = (taskId: string, taskUpdate: TaskUpdate) => {
+      onUpdateTask(taskId, taskUpdate)
+      setIsEditing(false)
     }
 
-    setIsLocalDescriptionExpanded(
-      (currentIsDescriptionExpanded) => !currentIsDescriptionExpanded,
-    )
-  }
+    const handleToggleDescription = () => {
+      if (onToggleDescription) {
+        onToggleDescription(task.id)
+        return
+      }
 
-  const taskItemClassName = [
-    'task-item',
-    `task-item--status-${task.status}`,
-    `task-item--due-${dueDateStatus}`,
-    isOverdue ? 'task-item--overdue' : '',
-  ]
-    .filter(Boolean)
-    .join(' ')
-  const statusActions = statusActionsByStatus[task.status]
+      setIsLocalDescriptionExpanded(
+        (currentIsDescriptionExpanded) => !currentIsDescriptionExpanded,
+      )
+    }
 
-  if (isEditing && displayMode === 'list') {
+    const taskItemClassName = [
+      'task-item',
+      `task-item--status-${task.status}`,
+      `task-item--due-${dueDateStatus}`,
+      isOverdue ? 'task-item--overdue' : '',
+      isDragging ? 'task-item--dragging' : '',
+    ]
+      .filter(Boolean)
+      .join(' ')
+    const statusActions = statusActionsByStatus[task.status]
+
+    if (isEditing && displayMode === 'list') {
+      return (
+        <li ref={ref} className="task-item task-item--editing">
+          <TaskEditForm
+            task={task}
+            onSave={handleSave}
+            onCancel={() => setIsEditing(false)}
+          />
+        </li>
+      )
+    }
+
     return (
-      <li className="task-item task-item--editing">
-        <TaskEditForm
-          task={task}
-          onSave={handleSave}
-          onCancel={() => setIsEditing(false)}
-        />
+      <li
+        ref={ref}
+        className={taskItemClassName}
+        {...draggableAttributes}
+        {...draggableListeners}
+      >
+        {flashKey > 0 && (
+          <span
+            key={flashKey}
+            className="task-item__flash"
+            aria-hidden="true"
+          />
+        )}
+
+        {isEditing && displayMode === 'board' ? (
+          <TaskEditModal
+            task={task}
+            onSave={handleSave}
+            onCancel={() => setIsEditing(false)}
+          />
+        ) : null}
+
+        <div className="task-item__content">
+          <p
+            className={task.status === 'done' ? 'task-title task-title--done' : 'task-title'}
+          >
+            {task.title}
+          </p>
+          {hasDescription ? (
+            <div className="task-description">
+              <p
+                id={descriptionId}
+                className={
+                  shouldCollapseDescription
+                    ? 'task-description__text task-description__text--collapsed'
+                    : 'task-description__text'
+                }
+              >
+                {task.description}
+              </p>
+              {shouldShowDescriptionToggle ? (
+                <button
+                  className="task-description__toggle"
+                  type="button"
+                  aria-controls={descriptionId}
+                  aria-expanded={descriptionExpanded}
+                  onClick={handleToggleDescription}
+                >
+                  {descriptionExpanded ? '折りたたむ' : 'もっと見る'}
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+          <div className="task-meta">
+            <span className={`status-badge status-badge--${task.status}`}>
+              {taskStatusLabels[task.status]}
+            </span>
+            <span className="category-label">{task.category}</span>
+            <span className={`priority-badge priority-badge--${task.priority}`}>
+              優先度: {priorityLabels[task.priority]}
+            </span>
+            <span
+              className={`due-date-badge due-date-badge--${dueDateStatus}`}
+              aria-label={getDueDateAriaLabel(
+                task,
+                dueDateStatus,
+                daysUntilDueDate,
+              )}
+            >
+              {getDueDateBadgeText(task, dueDateStatus, daysUntilDueDate)}
+            </span>
+            <time dateTime={task.createdAt}>{formatDate(task.createdAt)}</time>
+          </div>
+        </div>
+
+        <div
+          className="task-status-actions"
+          role="group"
+          aria-label={`${task.title}の状態変更`}
+        >
+          {statusActions.map((action) => (
+            <button
+              key={action.status}
+              className={`status-action-button status-action-button--${action.status}`}
+              type="button"
+              aria-label={`${task.title}を${action.ariaLabel}`}
+              onClick={() => onStatusChange(task.id, action.status)}
+            >
+              {action.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="task-actions">
+          <button
+            className="secondary-button"
+            type="button"
+            aria-label={`${task.title}を編集`}
+            onClick={() => setIsEditing(true)}
+          >
+            編集
+          </button>
+          <button
+            className="danger-button"
+            type="button"
+            aria-label={`${task.title}を削除`}
+            onClick={() => onDeleteTask(task.id)}
+          >
+            削除
+          </button>
+        </div>
       </li>
     )
-  }
-
-  return (
-    <li className={taskItemClassName}>
-      {isEditing && displayMode === 'board' ? (
-        <TaskEditModal
-          task={task}
-          onSave={handleSave}
-          onCancel={() => setIsEditing(false)}
-        />
-      ) : null}
-
-      <div className="task-item__content">
-        <p
-          className={task.status === 'done' ? 'task-title task-title--done' : 'task-title'}
-        >
-          {task.title}
-        </p>
-        {hasDescription ? (
-          <div className="task-description">
-            <p
-              id={descriptionId}
-              className={
-                shouldCollapseDescription
-                  ? 'task-description__text task-description__text--collapsed'
-                  : 'task-description__text'
-              }
-            >
-              {task.description}
-            </p>
-            {shouldShowDescriptionToggle ? (
-              <button
-                className="task-description__toggle"
-                type="button"
-                aria-controls={descriptionId}
-                aria-expanded={descriptionExpanded}
-                onClick={handleToggleDescription}
-              >
-                {descriptionExpanded ? '折りたたむ' : 'もっと見る'}
-              </button>
-            ) : null}
-          </div>
-        ) : null}
-        <div className="task-meta">
-          <span className={`status-badge status-badge--${task.status}`}>
-            {taskStatusLabels[task.status]}
-          </span>
-          <span className="category-label">{task.category}</span>
-          <span className={`priority-badge priority-badge--${task.priority}`}>
-            優先度: {priorityLabels[task.priority]}
-          </span>
-          <span
-            className={`due-date-badge due-date-badge--${dueDateStatus}`}
-            aria-label={getDueDateAriaLabel(
-              task,
-              dueDateStatus,
-              daysUntilDueDate,
-            )}
-          >
-            {getDueDateBadgeText(task, dueDateStatus, daysUntilDueDate)}
-          </span>
-          <time dateTime={task.createdAt}>{formatDate(task.createdAt)}</time>
-        </div>
-      </div>
-
-      <div
-        className="task-status-actions"
-        role="group"
-        aria-label={`${task.title}の状態変更`}
-      >
-        {statusActions.map((action) => (
-          <button
-            key={action.status}
-            className={`status-action-button status-action-button--${action.status}`}
-            type="button"
-            aria-label={`${task.title}を${action.ariaLabel}`}
-            onClick={() => onStatusChange(task.id, action.status)}
-          >
-            {action.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="task-actions">
-        <button
-          className="secondary-button"
-          type="button"
-          aria-label={`${task.title}を編集`}
-          onClick={() => setIsEditing(true)}
-        >
-          編集
-        </button>
-        <button
-          className="danger-button"
-          type="button"
-          aria-label={`${task.title}を削除`}
-          onClick={() => onDeleteTask(task.id)}
-        >
-          削除
-        </button>
-      </div>
-    </li>
-  )
-}
+  },
+)

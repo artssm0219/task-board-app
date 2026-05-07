@@ -63,6 +63,11 @@ function App() {
     statusFilter !== initialStatusFilter ||
     priorityFilter !== initialPriorityFilter
 
+  const filterEpoch = useMemo(
+    () => `${searchQuery}|${statusFilter}|${priorityFilter}|${sortOption}`,
+    [searchQuery, statusFilter, priorityFilter, sortOption],
+  )
+
   const handleAddTask = (taskDraft: TaskDraft) => {
     setTasks((currentTasks) => [createTask(taskDraft), ...currentTasks])
   }
@@ -180,25 +185,28 @@ function App() {
           />
         </div>
 
-        {viewMode === 'list' ? (
-          <TaskList
-            tasks={visibleTasks}
-            hasFilters={hasFilters}
-            onStatusChange={handleStatusChange}
-            onUpdateTask={handleUpdateTask}
-            onDeleteTask={handleDeleteTask}
-            onResetFilters={handleResetFilters}
-          />
-        ) : (
-          <TaskBoard
-            tasks={visibleTasks}
-            hasFilters={hasFilters}
-            onStatusChange={handleStatusChange}
-            onUpdateTask={handleUpdateTask}
-            onDeleteTask={handleDeleteTask}
-            onResetFilters={handleResetFilters}
-          />
-        )}
+        <div className="view-swap" key={viewMode}>
+          {viewMode === 'list' ? (
+            <TaskList
+              tasks={visibleTasks}
+              hasFilters={hasFilters}
+              filterEpoch={filterEpoch}
+              onStatusChange={handleStatusChange}
+              onUpdateTask={handleUpdateTask}
+              onDeleteTask={handleDeleteTask}
+              onResetFilters={handleResetFilters}
+            />
+          ) : (
+            <TaskBoard
+              tasks={visibleTasks}
+              hasFilters={hasFilters}
+              onStatusChange={handleStatusChange}
+              onUpdateTask={handleUpdateTask}
+              onDeleteTask={handleDeleteTask}
+              onResetFilters={handleResetFilters}
+            />
+          )}
+        </div>
       </section>
     </main>
   )

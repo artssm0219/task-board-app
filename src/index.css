@@ -92,6 +92,7 @@
   --board-done-bg: #f0fbf4;
   --board-empty-border: rgba(96, 112, 128, 0.28);
   --board-empty-bg: rgba(255, 255, 255, 0.48);
+  --flash-success: rgba(47, 158, 85, 0.5);
 
   color-scheme: light;
 
@@ -195,6 +196,7 @@
   --board-done-bg: #142018;
   --board-empty-border: rgba(169, 180, 192, 0.24);
   --board-empty-bg: rgba(28, 32, 36, 0.52);
+  --flash-success: rgba(53, 129, 78, 0.6);
 
   color-scheme: dark;
 }
